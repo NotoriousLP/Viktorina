@@ -1,3 +1,4 @@
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -7,7 +8,7 @@ public class Button : MonoBehaviour
 
     void Start()
     {
-        objekti = FindFirstObjectByType<Objects>(); 
+        objekti = FindFirstObjectByType<Objects>();
     }
     public void toGame()
     {
@@ -18,11 +19,19 @@ public class Button : MonoBehaviour
     {
         SceneManager.LoadScene("GameChoice", LoadSceneMode.Single); //Ielādē jaunu ainu
     }
+
+    public void toGameOption()
+    {
+        SceneManager.LoadScene("GameOption", LoadSceneMode.Single); //Ielādē jaunu ainu
+    }
     public void backToMain()
     {
         SceneManager.LoadScene("MainMenu", LoadSceneMode.Single); //Ielādē jaunu ainu
     }
-
+    public void toAddQuestions()
+    {
+        SceneManager.LoadScene("CreateQuestions", LoadSceneMode.Single); //Ielādē jaunu ainu
+    }
     public void toQuizTake()
     {
         SceneManager.LoadScene("QuizTake", LoadSceneMode.Single); //Ielādē jaunu ainu
@@ -38,13 +47,19 @@ public class Button : MonoBehaviour
         for (int i = 0; i < objekti.objects.Length; i++)
         {
             objekti.objects[i].SetActive(false);
+            objekti.inputField[i].text = "";
+        }
+        for (int i = 0; i < objekti.inputField.Length; i++)
+        {
+            objekti.inputField[i].text = "";
         }
 
     }
     public void showBank()
     {
-            objekti.objects[1].SetActive(true);
+        objekti.objects[1].SetActive(true);
     }
+
 
 }
 

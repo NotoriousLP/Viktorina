@@ -4,6 +4,10 @@ using TMPro;
 using Mono.Data.SqliteClient;
 using System.Collections.Generic;
 using System.Data;
+#if UNITY_EDITOR
+using UnityEditor.SearchService;
+#endif
+using UnityEngine.SceneManagement;
 
 public class BankLoader : MonoBehaviour
 {
@@ -61,6 +65,13 @@ public class BankLoader : MonoBehaviour
         SelectedBank.Name = name;
 
         Debug.Log("Izvēlēta banka: " + name);
-        objekti.objects[0].SetActive(true);
+        if (SceneManager.GetActiveScene().name == "CreateQuestions")
+        {
+            objekti.objects[0].SetActive(true);
+        }
+        else
+        {
+            SceneManager.LoadScene("GameScene");
+        }
     }
 }

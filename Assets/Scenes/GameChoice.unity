@@ -175,7 +175,6 @@ GameObject:
   - component: {fileID: 43504640}
   - component: {fileID: 43504639}
   - component: {fileID: 43504638}
-  - component: {fileID: 43504637}
   - component: {fileID: 43504636}
   m_Layer: 5
   m_Name: addNew
@@ -219,21 +218,6 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.5}
   m_EffectDistance: {x: -5, y: -5}
   m_UseGraphicAlpha: 1
---- !u!114 &43504637
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 43504634}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8dd076dffa085547b0f1d343d6978b2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isCorrect: 0
-  manager: {fileID: 0}
-  krasa: {r: 0.25490198, g: 0.25490198, b: 0.25490198, a: 0}
 --- !u!114 &43504638
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -277,7 +261,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 43504639}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 22984314}
+        m_TargetAssemblyTypeName: Button, Assembly-CSharp
+        m_MethodName: toAddQuestions
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &43504639
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -510,7 +506,6 @@ GameObject:
   - component: {fileID: 444961793}
   - component: {fileID: 444961792}
   - component: {fileID: 444961791}
-  - component: {fileID: 444961790}
   - component: {fileID: 444961789}
   m_Layer: 5
   m_Name: Back
@@ -554,21 +549,6 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.5}
   m_EffectDistance: {x: -5, y: -5}
   m_UseGraphicAlpha: 1
---- !u!114 &444961790
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 444961787}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8dd076dffa085547b0f1d343d6978b2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isCorrect: 0
-  manager: {fileID: 0}
-  krasa: {r: 0.25490198, g: 0.25490198, b: 0.25490198, a: 0}
 --- !u!114 &444961791
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1328,7 +1308,6 @@ GameObject:
   - component: {fileID: 1394670040}
   - component: {fileID: 1394670039}
   - component: {fileID: 1394670038}
-  - component: {fileID: 1394670041}
   - component: {fileID: 1394670042}
   m_Layer: 5
   m_Name: QuestionBank
@@ -1403,7 +1382,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 22984314}
         m_TargetAssemblyTypeName: Button, Assembly-CSharp
-        m_MethodName: toGameChoice
+        m_MethodName: toGameOption
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1451,21 +1430,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1394670036}
   m_CullTransparentMesh: 1
---- !u!114 &1394670041
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1394670036}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8dd076dffa085547b0f1d343d6978b2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isCorrect: 0
-  manager: {fileID: 0}
-  krasa: {r: 0.25490198, g: 0.25490198, b: 0.25490198, a: 0}
 --- !u!114 &1394670042
 MonoBehaviour:
   m_ObjectHideFlags: 0
