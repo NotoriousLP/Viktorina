@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Mono.Data.SqliteClient;
 using UnityEngine.Networking;
+using TMPro;
 public class Manager : MonoBehaviour
 {
     public List<Questions> QnA;
@@ -16,7 +17,15 @@ public class Manager : MonoBehaviour
     public GameObject GameOverPanel;
     public Text QuestionText;
     public Text ScoreText;
-    
+    public TMP_InputField playerNameInputField;
+
+    public UnityEngine.UI.Button saveButton;
+    public Text TimeText;
+
+    private float questionTime;
+    private float timeLeft;
+    private bool timerRunning = false;
+
 
     int totalQuestions = 0;
     public int score;
@@ -29,7 +38,7 @@ public class Manager : MonoBehaviour
     }
 
 
-        private IEnumerator LoadQuestionsForSelectedBank()
+    private IEnumerator LoadQuestionsForSelectedBank()
     {
         string dbName = "URI=file:jautajumi.db";
 
@@ -73,7 +82,10 @@ public class Manager : MonoBehaviour
 
                         q.Image = bilde;
                         QnA.Add(q);
-
+                        string timeStr = reader["Laiks"].ToString();
+                        float timeValue;
+                        float.TryParse(timeStr, out timeValue);
+                        q.TimeLimit = timeValue;
                         yield return null;
                     }
                 }
@@ -93,11 +105,26 @@ public class Manager : MonoBehaviour
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
-    void GameOver()
+  void GameOver()
     {
         QuizPanel.SetActive(false);
+
+     
         GameOverPanel.SetActive(true);
+
         ScoreText.text = score + "/" + totalQuestions;
+
+      
+        var scoreboard = FindFirstObjectByType<ScoreboardLoader>();
+        if (scoreboard != null)
+        {
+            scoreboard.LoadScoreboard(SelectedBank.ID);
+          
+        }
+        else
+        {
+            Debug.LogWarning("Kļūda ar scoreboard!");
+        }
     }
     public void Correct()
     {
@@ -112,17 +139,17 @@ public class Manager : MonoBehaviour
     }
     private IEnumerator WaitAndGenerate()
     {
-    yield return new WaitForSeconds(1f);
-    generateQuestion();
-    }   
+        yield return new WaitForSeconds(1f);
+        generateQuestion();
+    }
     void SetAnswers()
     {
-        for(int i=0; i < options.Length; i++)
+        for (int i = 0; i < options.Length; i++)
         {
-        options[i].GetComponent<AnswersScript>().isCorrect = false;
-        options[i].transform.GetChild(0).GetComponent<Text>().text = QnA[currentQuestion].Answers[i];           
-        
-            if(QnA[currentQuestion].CorrectAnswer == i+1)
+            options[i].GetComponent<AnswersScript>().isCorrect = false;
+            options[i].transform.GetChild(0).GetComponent<Text>().text = QnA[currentQuestion].Answers[i];
+
+            if (QnA[currentQuestion].CorrectAnswer == i + 1)
             {
                 options[i].GetComponent<AnswersScript>().isCorrect = true;
             }
@@ -135,14 +162,26 @@ public class Manager : MonoBehaviour
         {
             foreach (var btn in options)
             {
-            btn.GetComponent<AnswersScript>().ResetColor();
+                btn.GetComponent<AnswersScript>().ResetColor();
             }
             currentQuestion = Random.Range(0, QnA.Count);
-            
+
             QuestionImage.sprite = QnA[currentQuestion].Image;
             QuestionText.text = QnA[currentQuestion].Question;
             SetAnswers();
 
+            if (QnA[currentQuestion].TimeLimit > 0)
+            {
+                questionTime = QnA[currentQuestion].TimeLimit;
+                timeLeft = questionTime;
+                timerRunning = true;
+            }
+            else
+            {
+                TimeText.text = "";
+                Debug.LogWarning("TimeLimit for this question is zero or invalid.");
+                timerRunning = false;
+            }
         }
         else
         {
@@ -150,6 +189,107 @@ public class Manager : MonoBehaviour
             GameOver();
         }
     }
+
+    void Update()
+    {
+        if (timerRunning)
+        {
+            timeLeft -= Time.deltaTime;
+            TimeText.text = Mathf.Ceil(timeLeft).ToString() + "s";
+
+            if (timeLeft <= 0)
+            {
+                timerRunning = false;
+
+
+                if (questionTime > 0)
+                {
+                    Wrong();
+                }
+                else
+                {
+                    TimeText.text = "";
+                }
+            }
+        }
+    }
+    
+   public void SaveScore()
+{
+    string playerName = "Nezināms";
+
+    if (playerNameInputField != null)
+    {
+        playerName = playerNameInputField.text.Trim();
+        if (string.IsNullOrWhiteSpace(playerName))
+        {
+            playerName = "Nezināms";
+        }
+    }
+
+    var db = FindFirstObjectByType<dataBase>();
+    if (db == null)
+    {
+        Debug.LogError("Datu bāze - kļūda! Neizdevās saglabāt rezultātu.");
+        return;
+    }
+
+    
+    bool nameExists = false;
+
+    using (var connection = new SqliteConnection("URI=file:jautajumi.db"))
+    {
+        connection.Open();
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = @"
+                SELECT COUNT(*) 
+                FROM scoreBoard 
+                WHERE playerName = @name AND banka_id = @bankaId";
+            command.Parameters.Add(new SqliteParameter("@name", playerName));
+            command.Parameters.Add(new SqliteParameter("@bankaId", SelectedBank.ID));
+
+            long count = (long)command.ExecuteScalar();
+            nameExists = count > 0;
+        }
+        connection.Close();
+    }
+
+    if (nameExists)
+    {
+        Debug.LogWarning($"Spēlētājs '{playerName}' jau ir saglabāts šajā bankā. Nevar saglabāt atkārtoti.");
+        return;
+    }
+
+ 
+    db.SavePlayerScore(playerName, score);
+    Debug.Log($"Score saglabāts sēlētājam '{playerName}' ar {score} punktiem.");
+
+   
+    var scoreboard = FindFirstObjectByType<ScoreboardLoader>();
+    if (scoreboard != null)
+    {
+        scoreboard.LoadScoreboard(SelectedBank.ID);
+        Debug.Log("Scoreboard atjaunots.");
+    }
+    else
+    {
+        Debug.LogWarning("ScoreboardLoader nav atrasts - rezultātu tabula netika atjaunināta.");
+    }
+
+
+    if (saveButton != null)
+    {
+        saveButton.interactable = false;
+    }
+
+    if (playerNameInputField != null)
+    {
+        playerNameInputField.text = "";
+    }
+}
+
+
     
 
 }

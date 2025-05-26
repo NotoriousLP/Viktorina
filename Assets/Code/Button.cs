@@ -37,6 +37,11 @@ public class Button : MonoBehaviour
         SceneManager.LoadScene("QuizTake", LoadSceneMode.Single); //Ielādē jaunu ainu
     }
 
+     public void toScoreBoard()
+    {
+        SceneManager.LoadScene("ScoreBoard", LoadSceneMode.Single); 
+    }
+
     public void quitGame()
     {
         Application.Quit(); //Iziet no spēles
