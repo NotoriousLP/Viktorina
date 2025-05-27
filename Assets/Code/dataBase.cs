@@ -94,62 +94,76 @@ public class dataBase : MonoBehaviour
     }
 
     public void addDataQuestion()
+{
+    if (objekti == null || objekti.inputField.Length < 7)
     {
-        if (objekti == null || objekti.inputField.Length < 7)
-        {
-            Debug.LogError("Not enough input fields!");
-            return;
-        }
-
-        int bankaId = SelectedBank.ID;
-        Debug.Log("SelectedBank ID: " + SelectedBank.ID);
-
-        if (bankaId == 0)
-        {
-            Debug.LogError("Nav izvēlēta banka! BankaId = 0");
-            return;
-        }
-        if (imageImporter == null)
-        {
-            Debug.LogError("imageImporter nav piesaistīts!");
-        }
-        else
-        {
-            Debug.Log("Image file name: " + imageImporter.savedFileName);
-        }
-        using (var connection = new SqliteConnection(dbName))
-        {
-            connection.Open();
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = @"
-                INSERT INTO jautajumuBanka 
-                (Laiks, Jautajums, Bilde, Atbilde, OpcijaB, OpcijaC, OpcijaD, banka_id) 
-                VALUES (@laiks, @jautajums, @bilde, @atbilde, @opcB, @opcC, @opcD, @jtb);";
-
-                command.Parameters.Add(new SqliteParameter("@laiks", objekti.inputField[5].text));
-                command.Parameters.Add(new SqliteParameter("@jautajums", objekti.inputField[0].text));
-            #if UNITY_EDITOR
-                command.Parameters.Add(new SqliteParameter("@bilde", imageImporter.savedFileName));
-            #endif
-                command.Parameters.Add(new SqliteParameter("@atbilde", objekti.inputField[1].text));
-                command.Parameters.Add(new SqliteParameter("@opcB", objekti.inputField[2].text));
-                command.Parameters.Add(new SqliteParameter("@opcC", objekti.inputField[3].text));
-                command.Parameters.Add(new SqliteParameter("@opcD", objekti.inputField[4].text));
-                command.Parameters.Add(new SqliteParameter("@jtb", bankaId));
-
-                command.ExecuteNonQuery();
-            }
-        }
-
-        for (int i = 0; i < objekti.inputField.Length; i++)
-        {
-            objekti.inputField[i].text = "";
-        }
-
-        Debug.Log("Jautājums pievienots bankai ID: " + bankaId);
+        Debug.LogError("Not enough input fields!");
+        return;
     }
+
+    int bankaId = SelectedBank.ID;
+    Debug.Log("SelectedBank ID: " + SelectedBank.ID);
+
+    if (bankaId == 0)
+    {
+        Debug.LogError("Nav izvēlēta banka! BankaId = 0");
+        return;
+    }
+
+    // Laiks nedrīkst būt mazāks par 5 sekundēm un lielāks par 20 sekundēm
+    float timeValue;
+    bool isValidTime = float.TryParse(objekti.inputField[5].text, out timeValue);
+
+    if (!isValidTime || timeValue < 5f || timeValue > 20f)
+    {
+        Debug.LogError("Time must be between 5 and 20 seconds.");
+        return;
+    }
+
+
+    if (imageImporter == null)
+    {
+        Debug.LogError("imageImporter nav piesaistīts!");
+    }
+    else
+    {
+        Debug.Log("Image file name: " + imageImporter.savedFileName);
+    }
+
+    using (var connection = new SqliteConnection(dbName))
+    {
+        connection.Open();
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = @"
+            INSERT INTO jautajumuBanka 
+            (Laiks, Jautajums, Bilde, Atbilde, OpcijaB, OpcijaC, OpcijaD, banka_id) 
+            VALUES (@laiks, @jautajums, @bilde, @atbilde, @opcB, @opcC, @opcD, @jtb);";
+
+            command.Parameters.Add(new SqliteParameter("@laiks", objekti.inputField[5].text));
+            command.Parameters.Add(new SqliteParameter("@jautajums", objekti.inputField[0].text));
+        #if UNITY_EDITOR
+            command.Parameters.Add(new SqliteParameter("@bilde", imageImporter.savedFileName));
+        #endif
+            command.Parameters.Add(new SqliteParameter("@atbilde", objekti.inputField[1].text));
+            command.Parameters.Add(new SqliteParameter("@opcB", objekti.inputField[2].text));
+            command.Parameters.Add(new SqliteParameter("@opcC", objekti.inputField[3].text));
+            command.Parameters.Add(new SqliteParameter("@opcD", objekti.inputField[4].text));
+            command.Parameters.Add(new SqliteParameter("@jtb", bankaId));
+
+            command.ExecuteNonQuery();
+        }
+    }
+
+    for (int i = 0; i < objekti.inputField.Length; i++)
+    {
+        objekti.inputField[i].text = "";
+    }
+
+    Debug.Log("Jautājums pievienots bankai ID: " + bankaId);
+}
+
 
     public void SavePlayerScore(string playerName, int points)
     {

@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using Mono.Data.SqliteClient;
 using UnityEngine.Networking;
 using TMPro;
+
 public class Manager : MonoBehaviour
 {
     public List<Questions> QnA;
@@ -26,17 +27,15 @@ public class Manager : MonoBehaviour
     private float timeLeft;
     private bool timerRunning = false;
 
-
     int totalQuestions = 0;
     public int score;
+
     private void Start()
     {
-        QnA = new List<Questions>(); // Sagatavo tukšu sarakstu
+        QnA = new List<Questions>();
         StartCoroutine(LoadQuestionsForSelectedBank());
         Debug.Log("Ielādējam jautājumus bankai ID: " + SelectedBank.ID);
-
     }
-
 
     private IEnumerator LoadQuestionsForSelectedBank()
     {
@@ -68,24 +67,15 @@ public class Manager : MonoBehaviour
                         };
                         q.CorrectAnswer = 1;
                         string bildeNosaukums = reader["Bilde"].ToString();
-                        Debug.Log("Mēģinam ielādēt bildi: " + bildeNosaukums);
                         Sprite bilde = Resources.Load<Sprite>("Images/" + bildeNosaukums);
-
-                        if (bilde == null)
-                        {
-                            Debug.LogWarning("Attēls nav atrasts Resources: Images/" + bildeNosaukums);
-                        }
-                        else
-                        {
-                            Debug.Log("Attēls ielādēts veiksmīgi: " + bildeNosaukums);
-                        }
-
                         q.Image = bilde;
-                        QnA.Add(q);
+
                         string timeStr = reader["Laiks"].ToString();
                         float timeValue;
                         float.TryParse(timeStr, out timeValue);
                         q.TimeLimit = timeValue;
+
+                        QnA.Add(q);
                         yield return null;
                     }
                 }
@@ -98,50 +88,60 @@ public class Manager : MonoBehaviour
         generateQuestion();
     }
 
-
-
-
     public void velreiz()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
-  void GameOver()
+
+    void GameOver()
     {
         QuizPanel.SetActive(false);
-
-     
         GameOverPanel.SetActive(true);
-
         ScoreText.text = score + "/" + totalQuestions;
 
-      
         var scoreboard = FindFirstObjectByType<ScoreboardLoader>();
         if (scoreboard != null)
         {
             scoreboard.LoadScoreboard(SelectedBank.ID);
-          
         }
         else
         {
             Debug.LogWarning("Kļūda ar scoreboard!");
         }
     }
+
+    // NEW: Dynamic point calculation based on time limit
+    private int CalculatePoints(float timeLimit)
+    {
+        if (timeLimit <= 0) return 1;
+        if (timeLimit <= 4) return 10;
+        if (timeLimit <= 9) return 8;
+        if (timeLimit <= 14) return 6;
+        if (timeLimit <= 19) return 4;
+        return 2;
+    }
+
     public void Correct()
     {
-        score += 1;
+        int pointsEarned = CalculatePoints(QnA[currentQuestion].TimeLimit);
+        score += pointsEarned;
+
         QnA.RemoveAt(currentQuestion);
         StartCoroutine(WaitAndGenerate());
     }
+
     public void Wrong()
     {
         QnA.RemoveAt(currentQuestion);
         StartCoroutine(WaitAndGenerate());
     }
+
     private IEnumerator WaitAndGenerate()
     {
         yield return new WaitForSeconds(1f);
         generateQuestion();
     }
+
     void SetAnswers()
     {
         for (int i = 0; i < options.Length; i++)
@@ -179,7 +179,6 @@ public class Manager : MonoBehaviour
             else
             {
                 TimeText.text = "";
-                Debug.LogWarning("TimeLimit for this question is zero or invalid.");
                 timerRunning = false;
             }
         }
@@ -201,7 +200,6 @@ public class Manager : MonoBehaviour
             {
                 timerRunning = false;
 
-
                 if (questionTime > 0)
                 {
                     Wrong();
@@ -213,83 +211,71 @@ public class Manager : MonoBehaviour
             }
         }
     }
-    
-   public void SaveScore()
-{
-    string playerName = "Nezināms";
 
-    if (playerNameInputField != null)
+    public void SaveScore()
     {
-        playerName = playerNameInputField.text.Trim();
-        if (string.IsNullOrWhiteSpace(playerName))
+        string playerName = "Nezināms";
+
+        if (playerNameInputField != null)
         {
-            playerName = "Nezināms";
+            playerName = playerNameInputField.text.Trim();
+            if (string.IsNullOrWhiteSpace(playerName))
+            {
+                playerName = "Nezināms";
+            }
         }
-    }
 
-    var db = FindFirstObjectByType<dataBase>();
-    if (db == null)
-    {
-        Debug.LogError("Datu bāze - kļūda! Neizdevās saglabāt rezultātu.");
-        return;
-    }
-
-    
-    bool nameExists = false;
-
-    using (var connection = new SqliteConnection("URI=file:jautajumi.db"))
-    {
-        connection.Open();
-        using (var command = connection.CreateCommand())
+        var db = FindFirstObjectByType<dataBase>();
+        if (db == null)
         {
-            command.CommandText = @"
-                SELECT COUNT(*) 
-                FROM scoreBoard 
-                WHERE playerName = @name AND banka_id = @bankaId";
-            command.Parameters.Add(new SqliteParameter("@name", playerName));
-            command.Parameters.Add(new SqliteParameter("@bankaId", SelectedBank.ID));
-
-            long count = (long)command.ExecuteScalar();
-            nameExists = count > 0;
+            Debug.LogError("Datu bāze - kļūda! Neizdevās saglabāt rezultātu.");
+            return;
         }
-        connection.Close();
-    }
 
-    if (nameExists)
-    {
-        Debug.LogWarning($"Spēlētājs '{playerName}' jau ir saglabāts šajā bankā. Nevar saglabāt atkārtoti.");
-        return;
-    }
+        bool nameExists = false;
 
- 
-    db.SavePlayerScore(playerName, score);
-    Debug.Log($"Score saglabāts sēlētājam '{playerName}' ar {score} punktiem.");
+        using (var connection = new SqliteConnection("URI=file:jautajumi.db"))
+        {
+            connection.Open();
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = @"
+                    SELECT COUNT(*) 
+                    FROM scoreBoard 
+                    WHERE playerName = @name AND banka_id = @bankaId";
+                command.Parameters.Add(new SqliteParameter("@name", playerName));
+                command.Parameters.Add(new SqliteParameter("@bankaId", SelectedBank.ID));
 
-   
-    var scoreboard = FindFirstObjectByType<ScoreboardLoader>();
-    if (scoreboard != null)
-    {
-        scoreboard.LoadScoreboard(SelectedBank.ID);
-        Debug.Log("Scoreboard atjaunots.");
-    }
-    else
-    {
-        Debug.LogWarning("ScoreboardLoader nav atrasts - rezultātu tabula netika atjaunināta.");
-    }
+                long count = (long)command.ExecuteScalar();
+                nameExists = count > 0;
+            }
+            connection.Close();
+        }
 
+        if (nameExists)
+        {
+            Debug.LogWarning($"Spēlētājs '{playerName}' jau ir saglabāts šajā bankā. Nevar saglabāt atkārtoti.");
+            return;
+        }
 
-    if (saveButton != null)
-    {
-        saveButton.interactable = false;
-    }
+        db.SavePlayerScore(playerName, score);
+        Debug.Log($"Score saglabāts sēlētājam '{playerName}' ar {score} punktiem.");
 
-    if (playerNameInputField != null)
-    {
-        playerNameInputField.text = "";
+        var scoreboard = FindFirstObjectByType<ScoreboardLoader>();
+        if (scoreboard != null)
+        {
+            scoreboard.LoadScoreboard(SelectedBank.ID);
+        }
+
+        if (saveButton != null)
+        {
+            saveButton.interactable = false;
+        }
+
+        if (playerNameInputField != null)
+        {
+            playerNameInputField.text = "";
+        }
     }
 }
 
-
-    
-
-}
