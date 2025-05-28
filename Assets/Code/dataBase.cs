@@ -156,12 +156,17 @@ public class dataBase : MonoBehaviour
         }
     }
 
-    for (int i = 0; i < objekti.inputField.Length; i++)
-    {
-        objekti.inputField[i].text = "";
-    }
+        for (int i = 0; i < objekti.inputField.Length; i++)
+        {
+            objekti.inputField[i].text = "";
+        }
 
-    Debug.Log("Jautājums pievienots bankai ID: " + bankaId);
+#if UNITY_EDITOR
+        imageImporter.savedFileName = "";
+        imageImporter.ClearPreview();
+#endif
+
+        Debug.Log("Jautājums pievienots bankai ID: " + bankaId);
 }
 
 

@@ -44,5 +44,13 @@ public class ImageImporter : MonoBehaviour
             Debug.Log("Attēls nav izvēlēts.");
         }
     }
+    public void ClearPreview()
+    {
+        if (previewImage != null)
+        {
+            previewImage.sprite = null;
+            previewImage.color = new Color(1, 1, 1, 0); 
+        }
+    }
 }
 #endif

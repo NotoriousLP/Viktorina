@@ -28,6 +28,7 @@ public class Manager : MonoBehaviour
     private bool timerRunning = false;
 
     int totalQuestions = 0;
+    int correctAnswers = 0;
     public int score;
 
     private void Start()
@@ -97,7 +98,7 @@ public class Manager : MonoBehaviour
     {
         QuizPanel.SetActive(false);
         GameOverPanel.SetActive(true);
-        ScoreText.text = score + "/" + totalQuestions;
+        ScoreText.text = "Pareizas atbildes skaits: " + correctAnswers + " / " + totalQuestions +  "\nIeguto punktu skaits: " + score;
 
         var scoreboard = FindFirstObjectByType<ScoreboardLoader>();
         if (scoreboard != null)
@@ -123,6 +124,7 @@ public class Manager : MonoBehaviour
 
     public void Correct()
     {
+        correctAnswers++;
         int pointsEarned = CalculatePoints(QnA[currentQuestion].TimeLimit);
         score += pointsEarned;
 
@@ -144,15 +146,35 @@ public class Manager : MonoBehaviour
 
     void SetAnswers()
     {
+        // Получаем текущий вопрос и ответы
+        Questions currentQ = QnA[currentQuestion];
+
+        // Создаём список пар: текст + метка, правильный ли
+        List<(string text, bool isCorrect)> shuffledAnswers = new List<(string, bool)>();
+
+        for (int i = 0; i < currentQ.Answers.Length; i++)
+        {
+            bool isCorrect = (i == currentQ.CorrectAnswer - 1); // CorrectAnswer == 1 -> индекс 0
+            shuffledAnswers.Add((currentQ.Answers[i], isCorrect));
+        }
+
+        // Перемешиваем список
+        for (int i = 0; i < shuffledAnswers.Count; i++)
+        {
+            int rnd = Random.Range(i, shuffledAnswers.Count);
+            (shuffledAnswers[i], shuffledAnswers[rnd]) = (shuffledAnswers[rnd], shuffledAnswers[i]);
+        }
+
+        // Назначаем кнопкам текст и isCorrect
         for (int i = 0; i < options.Length; i++)
         {
-            options[i].GetComponent<AnswersScript>().isCorrect = false;
-            options[i].transform.GetChild(0).GetComponent<Text>().text = QnA[currentQuestion].Answers[i];
+            var answerScript = options[i].GetComponent<AnswersScript>();
+            answerScript.isCorrect = shuffledAnswers[i].isCorrect;
 
-            if (QnA[currentQuestion].CorrectAnswer == i + 1)
-            {
-                options[i].GetComponent<AnswersScript>().isCorrect = true;
-            }
+            Text answerText = options[i].transform.GetChild(0).GetComponent<Text>();
+            answerText.text = shuffledAnswers[i].text;
+
+            answerScript.ResetColor();
         }
     }
 

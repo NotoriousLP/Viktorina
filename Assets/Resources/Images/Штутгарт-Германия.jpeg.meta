@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: f70a431e2ba25ff4bb9f67cc08ec4379
+guid: 507cf554a306f574ea63a911fd3b1457
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 3172987335709827173
-    second: "WhatsApp att\u0113ls 2025-05-21 plkst. 19.34.42_81a6c19e_0"
+      213: 1029129485611619643
+    second: "\u0428\u0442\u0443\u0442\u0433\u0430\u0440\u0442-\u0413\u0435\u0440\u043C\u0430\u043D\u0438\u044F_0"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -96,30 +96,17 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: WebGL
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "WhatsApp att\u0113ls 2025-05-21 plkst. 19.34.42_81a6c19e_0"
+      name: "\u0428\u0442\u0443\u0442\u0433\u0430\u0440\u0442-\u0413\u0435\u0440\u043C\u0430\u043D\u0438\u044F_0"
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1536
-        height: 1024
+        width: 1772
+        height: 1181
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5602ccdab27b80c20800000000000000
-      internalID: 3172987335709827173
+      spriteID: b35d2c980d3384e00800000000000000
+      internalID: 1029129485611619643
       vertices: []
       indices: 
       edges: []
@@ -147,8 +134,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      "WhatsApp att\u0113ls 2025-05-21 plkst. 19.34.42_81a6c19e_0": 3172987335709827173
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
