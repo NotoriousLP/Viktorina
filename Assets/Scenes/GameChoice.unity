@@ -163,6 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f3b3cd64e0f9ae4794e5173345923c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  addPoga: {fileID: 43504638}
 --- !u!1 &43504634
 GameObject:
   m_ObjectHideFlags: 0

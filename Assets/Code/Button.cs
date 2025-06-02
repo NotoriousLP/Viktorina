@@ -5,10 +5,19 @@ using UnityEngine.SceneManagement;
 public class Button : MonoBehaviour
 {
     private Objects objekti;
-
+    public UnityEngine.UI.Button addPoga;
     void Start()
     {
         objekti = FindFirstObjectByType<Objects>();
+        if (CurrentUser.Role == "player"){
+            // Paslēpj Edit pogu
+            addPoga.gameObject.SetActive(false);
+        }
+        else if (CurrentUser.Role == "editor")
+        {
+            // Parāda Edit pogu
+            addPoga.gameObject.SetActive(true);
+        }
     }
     public void toGame()
     {
@@ -41,7 +50,10 @@ public class Button : MonoBehaviour
     {
         SceneManager.LoadScene("ScoreBoard", LoadSceneMode.Single); 
     }
-
+    public void toLogOut()
+    {
+        SceneManager.LoadScene("loginScene", LoadSceneMode.Single); 
+    }
     public void quitGame()
     {
         Application.Quit(); //Iziet no spēles

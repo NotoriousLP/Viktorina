@@ -21,8 +21,7 @@ public class dataBase : MonoBehaviour
         bankloader = FindFirstObjectByType<BankLoader>();
         imageImporter = FindFirstObjectByType<ImageImporter>();
         createDB();
-     
-         
+    
     }
 
  
@@ -58,6 +57,12 @@ public class dataBase : MonoBehaviour
                     punkti INT,
                     datums TEXT,
                     banka_id INT
+                    );
+                    CREATE TABLE IF NOT EXISTS users (
+                    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    role TEXT NOT NULL
                     );";
                 command.ExecuteNonQuery();
             }
