@@ -1,17 +1,20 @@
 using System;
 using Mono.Data.SqliteClient;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class dataBase : MonoBehaviour
 {
     private string dbName = "URI=file:jautajumi.db";
     private Objects objekti;
-#if UNITY_EDITOR
+
+    #if UNITY_EDITOR
     public ImageImporter imageImporter;
-#endif
+    #endif
 
     private BankLoader bankloader;
-
+    public UnityEngine.UI.Button okPoga;
     void Start()
     {
         objekti = FindFirstObjectByType<Objects>();
@@ -62,6 +65,32 @@ public class dataBase : MonoBehaviour
             connection.Close();
         }
     }
+
+    public void showQuestionWindow()
+    {
+        // Aktivizē logu:
+        objekti.objects[0].SetActive(true);
+
+        // Notīra InputField'us:
+        for (int i = 0; i < objekti.inputField.Length; i++)
+        {
+            objekti.inputField[i].text = "";
+        }
+
+        // Notīra ImageImporter savedFileName:
+        #if UNITY_EDITOR
+        imageImporter.savedFileName = "";
+        #endif
+
+        // Resetē pogu → uz pievienoJautajumu
+        okPoga.onClick.RemoveAllListeners();
+        okPoga.onClick.AddListener(addDataQuestion);
+
+        okPoga.transform.GetChild(0).GetComponent<Text>().text = "Pievienot jautājumu";
+
+        Debug.Log("Atvērts jauna jautājuma logs.");
+    }
+        
     public void addQuestionBank()
     {
         if (objekti == null || objekti.inputField.Length < 7)

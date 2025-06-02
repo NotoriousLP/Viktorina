@@ -58,8 +58,14 @@ public class Button : MonoBehaviour
         {
             objekti.inputField[i].text = "";
         }
-
     }
+
+    public void closeButtonEdit()
+    {
+            objekti.objects[0].SetActive(false);
+            objekti.inputField[0].text = "";
+    }
+
     public void showBank()
     {
         objekti.objects[1].SetActive(true);

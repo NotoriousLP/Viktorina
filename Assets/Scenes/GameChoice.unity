@@ -1050,7 +1050,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Izveidot/Dz\u0113st jaunu"
+  m_Text: "Izveidot/Dz\u0113st jaunus jaut\u0101jumus"
 --- !u!222 &867429417
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1129,7 +1129,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Izv\u0113l\u0113ties jaut\u0101jumu banku"
+  m_Text: "Sp\u0113let viktor\u012Bnu"
 --- !u!222 &1055543271
 CanvasRenderer:
   m_ObjectHideFlags: 0
