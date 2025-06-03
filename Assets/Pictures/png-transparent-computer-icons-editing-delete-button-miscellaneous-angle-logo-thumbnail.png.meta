@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      png-transparent-computer-icons-editing-delete-button-miscellaneous-angle-logo-thumbnail_0: 8389127492388947445
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

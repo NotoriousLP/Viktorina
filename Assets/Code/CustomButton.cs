@@ -2,14 +2,15 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class Button : MonoBehaviour
+public class CustomButton : MonoBehaviour
 {
     private Objects objekti;
     public UnityEngine.UI.Button addPoga;
     void Start()
     {
         objekti = FindFirstObjectByType<Objects>();
-        if (CurrentUser.Role == "player"){
+        if (CurrentUser.Role == "player")
+        {
             // Paslēpj Edit pogu
             addPoga.gameObject.SetActive(false);
         }
@@ -18,6 +19,10 @@ public class Button : MonoBehaviour
             // Parāda Edit pogu
             addPoga.gameObject.SetActive(true);
         }
+        else
+        {
+            Debug.LogError("addPoga nav piešķirta! Pārbaudi Inspector laukā.");
+         }
     }
     public void toGame()
     {

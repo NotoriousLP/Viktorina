@@ -49,8 +49,9 @@ public class UserLogin : MonoBehaviour
 
                         Debug.Log($"Login OK: {CurrentUser.Username} ({CurrentUser.Role})");
 
-                        // Pāriet uz MainMenu (pieliec īsto ainu)
+                        // Pēc veiksmīgas pieteikšanās pāriet uz MainMenu neatkarīgi no lietotāja lomas
                         SceneManager.LoadScene("MainMenu");
+
                     }
                     else
                     {
