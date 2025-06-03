@@ -1,56 +1,76 @@
-#if UNITY_EDITOR
 using UnityEngine;
-using UnityEditor;
 using System.IO;
 using UnityEngine.UI;
+using SFB;
+using UnityEngine.Networking;
 
 public class ImageImporter : MonoBehaviour
 {
-    public Image previewImage; // ← UI bilde priekšskatījumam
-    public string savedFileName; // ← Saglabātais faila nosaukums
+    public Image previewImage;
+    public string savedFileName;
+    public string savedFilePath; // NEW
 
     public void SelectImageFromPC()
     {
-        string path = EditorUtility.OpenFilePanel("Izvēlies attēlu", "", "png,jpg,jpeg");
+        var paths = StandaloneFileBrowser.OpenFilePanel("Izvēlies attēlu", "", new[] { new ExtensionFilter("Image Files", "png", "jpg", "jpeg") }, false);
 
-        if (!string.IsNullOrEmpty(path))
+        if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
         {
+            string path = paths[0];
             string fileName = Path.GetFileName(path);
             string fileNameWithoutExt = Path.GetFileNameWithoutExtension(path);
-            string targetPath = Application.dataPath + "/Resources/Images/" + fileName;
 
-            // Nokopē failu
+            // Saglabā uz persistentDataPath/Images
+            string imagesFolder = Path.Combine(Application.persistentDataPath, "Images");
+            Directory.CreateDirectory(imagesFolder);
+
+            string targetPath = Path.Combine(imagesFolder, fileName);
             File.Copy(path, targetPath, true);
-            Debug.Log("Attēls nokopēts uz Resources/Images/: " + fileName);
+
+            Debug.Log("Attēls nokopēts uz: " + targetPath);
 
             savedFileName = fileNameWithoutExt;
+            savedFilePath = targetPath; // NEW
 
-            // Atjauno Asset datni (tikai Editorā)
-            AssetDatabase.Refresh();
-
-            // Ielādē kā Sprite no Resources
-            Sprite sprite = Resources.Load<Sprite>("Images/" + fileNameWithoutExt);
-            if (sprite != null && previewImage != null)
-            {
-                previewImage.sprite = sprite;
-            }
-            else
-            {
-                Debug.LogError("Nevar ielādēt sprite no Resources: " + fileNameWithoutExt);
-            }
+            // Ielādē un parāda preview
+            StartCoroutine(LoadImageCoroutine("file://" + targetPath));
         }
         else
         {
             Debug.Log("Attēls nav izvēlēts.");
         }
     }
+
+    private System.Collections.IEnumerator LoadImageCoroutine(string filePath)
+    {
+        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(filePath))
+        {
+            yield return uwr.SendWebRequest();
+
+            if (uwr.result == UnityWebRequest.Result.Success)
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+                Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+
+                if (previewImage != null)
+                {
+                    previewImage.sprite = sprite;
+                    previewImage.color = Color.white;
+                }
+            }
+            else
+            {
+                Debug.LogError("Kļūda ielādējot bildi: " + uwr.error);
+            }
+        }
+    }
+
     public void ClearPreview()
     {
         if (previewImage != null)
         {
             previewImage.sprite = null;
-            previewImage.color = new Color(1, 1, 1, 0); 
+            previewImage.color = new Color(1, 1, 1, 0);
         }
     }
 }
-#endif

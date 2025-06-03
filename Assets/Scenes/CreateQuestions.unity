@@ -202,6 +202,7 @@ MonoBehaviour:
   - {fileID: 609141067}
   - {fileID: 1740026493}
   - {fileID: 162146180}
+  okPoga: {fileID: 237564136}
 --- !u!114 &22984316
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -215,7 +216,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   imageImporter: {fileID: 0}
-  okPoga: {fileID: 0}
 --- !u!114 &22984317
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -245,6 +245,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   previewImage: {fileID: 1330931986}
   savedFileName: 
+  savedFilePath: 
 --- !u!114 &22984319
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -261,7 +262,6 @@ MonoBehaviour:
   questionRowPrefab: {fileID: 1034991574}
   dbName: URI=file:jautajumi.db
   objekti: {fileID: 0}
-  okPoga: {fileID: 237564136}
   imageImporter: {fileID: 0}
 --- !u!114 &22984320
 MonoBehaviour:
@@ -279,7 +279,6 @@ MonoBehaviour:
   questionRowPrefab: {fileID: 0}
   dbName: URI=file:jautajumi.db
   objekti: {fileID: 0}
-  okPoga: {fileID: 237564136}
   imageImporter: {fileID: 0}
 --- !u!1 &34335753
 GameObject:

@@ -4,21 +4,18 @@ using TMPro;
 using Mono.Data.SqliteClient;
 using System.Collections.Generic;
 using System.Data;
-#if UNITY_EDITOR
 using UnityEditor.SearchService;
-#endif
 using UnityEngine.SceneManagement;
+using System.Collections;
+using UnityEngine.Networking;
 public class EditBankLoader : MonoBehaviour
 {
     public Transform questionParent; // Kur spawnēt jautājumus
     public GameObject questionRowPrefab; // Prefabs priekš jautājuma rindiņas
     public string dbName = "URI=file:jautajumi.db";
     public Objects objekti;
-    public UnityEngine.UI.Button okPoga;
-
-    #if UNITY_EDITOR
     public ImageImporter imageImporter;
-#endif
+
 
     void Start()
     {
@@ -67,20 +64,46 @@ public class EditBankLoader : MonoBehaviour
                         string imagePath = reader["Bilde"].ToString();
                         var imageObj = row.transform.Find("questionImage").GetComponent<Image>();
 
-                        Sprite loadedSprite = Resources.Load<Sprite>("Images/" + imagePath);
-                        if (loadedSprite != null)
-                        {
-                            imageObj.sprite = loadedSprite;
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"Neizdevās ielādēt attēlu: Images/{imagePath}");
-                        }
+                        StartCoroutine(LoadImageFromPath(imagePath, imageObj));
+                        
                     }
                 }
             }
         }
     }
+
+    private IEnumerator LoadImageFromPath(string path, Image targetImage)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            Debug.LogWarning("Bilde ceļš ir tukšs.");
+            targetImage.sprite = null;
+            yield break;
+        }
+
+        string finalPath = path;
+        if (!path.StartsWith("file://"))
+        {
+            finalPath = "file://" + path;
+        }
+
+        using (UnityEngine.Networking.UnityWebRequest uwr = UnityEngine.Networking.UnityWebRequestTexture.GetTexture(finalPath))
+        {
+            yield return uwr.SendWebRequest();
+
+            if (uwr.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+                Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+
+                targetImage.sprite = sprite;
+                targetImage.color = Color.white;
+
+                Debug.Log($"Bilde ielādēta no: {path}");
+            }
+        }
+    }
+       
 
     public void EditQuestion(int questionId)
     {
@@ -94,11 +117,11 @@ public class EditBankLoader : MonoBehaviour
         LoadQuestionData(questionId);
 
         // Pārsien pogu uz SaveEditedQuestion
-        okPoga.onClick.RemoveAllListeners();
-        okPoga.onClick.AddListener(SaveEditedQuestion);
+        objekti.okPoga.onClick.RemoveAllListeners();
+        objekti.okPoga.onClick.AddListener(SaveEditedQuestion);
 
         // (Var arī nomainīt pogas tekstu ja gribi)
-        okPoga.transform.GetChild(0).GetComponent<Text>().text = "Saglabāt izmaiņas";
+        objekti.okPoga.transform.GetChild(0).GetComponent<Text>().text = "Saglabāt izmaiņas";
     }
 
 public void LoadQuestionData(int questionId)
@@ -125,28 +148,65 @@ public void LoadQuestionData(int questionId)
                     objekti.inputField[5].text = reader["Laiks"].ToString();
 
                     string imagePath = reader["Bilde"].ToString();
+                    imageImporter.savedFilePath = imagePath;
+                    StartCoroutine(LoadPreviewImage(imagePath));
 
-                    #if UNITY_EDITOR
-                    imageImporter.savedFileName = imagePath;
-                    #endif
                 }
             }
         }
     }
 }
-
-
-public void SaveEditedQuestion()
+private IEnumerator LoadPreviewImage(string path)
 {
-    Debug.Log($"Saglabājam question ID: {SelectedQuestion.ID}");
-
-    using (var connection = new SqliteConnection(dbName))
+    if (string.IsNullOrEmpty(path))
     {
-        connection.Open();
+        Debug.LogWarning("Preview bilde ceļš ir tukšs.");
+        imageImporter.previewImage.sprite = null;
+        imageImporter.previewImage.color = new Color(1,1,1,0);
+        yield break;
+    }
 
-        using (var command = connection.CreateCommand())
+    string finalPath = path;
+    if (!path.StartsWith("file://"))
+    {
+        finalPath = "file://" + path;
+    }
+
+    using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(finalPath))
+    {
+        yield return uwr.SendWebRequest();
+
+        if (uwr.result == UnityWebRequest.Result.Success)
         {
-            command.CommandText = @"
+            Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+
+            imageImporter.previewImage.sprite = sprite;
+            imageImporter.previewImage.color = Color.white;
+
+            Debug.Log($"Preview bilde ielādēta no: {path}");
+        }
+        else
+        {
+            Debug.LogError($"Neizdevās ielādēt preview bildi no: {path}. Kļūda: {uwr.error}");
+            imageImporter.previewImage.sprite = null;
+            imageImporter.previewImage.color = new Color(1,1,1,0);
+        }
+    }
+}
+
+
+    public void SaveEditedQuestion()
+    {
+        Debug.Log($"Saglabājam question ID: {SelectedQuestion.ID}");
+
+        using (var connection = new SqliteConnection(dbName))
+        {
+            connection.Open();
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = @"
                 UPDATE jautajumuBanka 
                 SET 
                     Jautajums = @jautajums,
@@ -158,38 +218,38 @@ public void SaveEditedQuestion()
                     Bilde = @bilde
                 WHERE ID = @id";
 
-            command.Parameters.Add(new SqliteParameter("@jautajums", objekti.inputField[0].text));
-            command.Parameters.Add(new SqliteParameter("@atbilde", objekti.inputField[1].text));
-            command.Parameters.Add(new SqliteParameter("@opcB", objekti.inputField[2].text));
-            command.Parameters.Add(new SqliteParameter("@opcC", objekti.inputField[3].text));
-            command.Parameters.Add(new SqliteParameter("@opcD", objekti.inputField[4].text));
-            command.Parameters.Add(new SqliteParameter("@laiks", objekti.inputField[5].text));
+                command.Parameters.Add(new SqliteParameter("@jautajums", objekti.inputField[0].text));
+                command.Parameters.Add(new SqliteParameter("@atbilde", objekti.inputField[1].text));
+                command.Parameters.Add(new SqliteParameter("@opcB", objekti.inputField[2].text));
+                command.Parameters.Add(new SqliteParameter("@opcC", objekti.inputField[3].text));
+                command.Parameters.Add(new SqliteParameter("@opcD", objekti.inputField[4].text));
+                command.Parameters.Add(new SqliteParameter("@laiks", objekti.inputField[5].text));
 
-            #if UNITY_EDITOR
-            command.Parameters.Add(new SqliteParameter("@bilde", imageImporter.savedFileName));
-            #endif
+#if UNITY_EDITOR
+                command.Parameters.Add(new SqliteParameter("@bilde", imageImporter.savedFilePath));
+#endif
 
-            command.Parameters.Add(new SqliteParameter("@id", SelectedQuestion.ID));
+                command.Parameters.Add(new SqliteParameter("@id", SelectedQuestion.ID));
 
-            int rowsAffected = command.ExecuteNonQuery();
+                int rowsAffected = command.ExecuteNonQuery();
 
-            if (rowsAffected > 0)
-            {
-                Debug.Log($"Jautājums ID {SelectedQuestion.ID} veiksmīgi saglabāts.");
-            }
-            else
-            {
-                Debug.LogWarning($"Neizdevās saglabāt jautājumu ID {SelectedQuestion.ID}.");
+                if (rowsAffected > 0)
+                {
+                    Debug.Log($"Jautājums ID {SelectedQuestion.ID} veiksmīgi saglabāts.");
+                }
+                else
+                {
+                    Debug.LogWarning($"Neizdevās saglabāt jautājumu ID {SelectedQuestion.ID}.");
+                }
             }
         }
+
+        // Aizver edit paneli
+        objekti.objects[0].SetActive(false);
+
+        // Atjauno sarakstu
+        LoadQuestionsForBank(SelectedBank.ID);
     }
-
-    // Aizver edit paneli
-    objekti.objects[0].SetActive(false);
-
-    // Atjauno sarakstu
-    LoadQuestionsForBank(SelectedBank.ID);
-}
 
 
     public void DeleteQuestion(int questionId)

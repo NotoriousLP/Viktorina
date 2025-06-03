@@ -4,9 +4,6 @@ using TMPro;
 using Mono.Data.SqliteClient;
 using System.Collections.Generic;
 using System.Data;
-#if UNITY_EDITOR
-using UnityEditor.SearchService;
-#endif
 using UnityEngine.SceneManagement;
 
 public class BankLoader : MonoBehaviour
@@ -14,12 +11,15 @@ public class BankLoader : MonoBehaviour
     public GameObject buttonPrefab;
     public Transform parentPanel; 
     private Objects objekti;
-    public EditBankLoader editBankLoader; 
-
+    public EditBankLoader editBankLoader;
+    public dataBase database;
+    public ImageImporter imageImporter;
     private string dbName = "URI=file:jautajumi.db";
 
     void Start()
     {
+        imageImporter = FindFirstObjectByType<ImageImporter>();
+        database = FindFirstObjectByType<dataBase>();
         if (SceneManager.GetActiveScene().name == "CreateQuestions")
         {
             LoadBanks();
@@ -101,7 +101,7 @@ public class BankLoader : MonoBehaviour
 
     public void loadGameBanks()
     {
-                // Notīrām jau esošās pogas
+        // Notīrām jau esošās pogas
         foreach (Transform child in parentPanel)
         {
             Destroy(child.gameObject);
@@ -178,9 +178,31 @@ public class BankLoader : MonoBehaviour
         SelectedBank.Name = name;
 
         Debug.Log("Izvēlēta banka: " + name);
-        if (SceneManager.GetActiveScene().name == "CreateQuestions")
-        {
-            objekti.objects[0].SetActive(true);
+                if (SceneManager.GetActiveScene().name == "CreateQuestions")
+                {
+                int bankaId = SelectedBank.ID;
+                if (bankaId == 0)
+                {
+                    Debug.LogError("Nav izvēlēta banka! BankaId = 0");
+                    return;
+                }
+                objekti.objects[0].SetActive(true);
+
+                for (int i = 0; i < objekti.inputField.Length; i++)
+                {
+                    objekti.inputField[i].text = "";
+                }
+
+
+                imageImporter.savedFilePath= "";
+
+                // Resetē pogu → uz pievienoJautajumu
+                objekti.okPoga.onClick.RemoveAllListeners();
+                objekti.okPoga.onClick.AddListener(database.addDataQuestion);
+
+                objekti.okPoga.transform.GetChild(0).GetComponent<Text>().text = "Pievienot jautājumu";
+
+                Debug.Log("Atvērts jauna jautājuma logs.");
         }
         else
         {

@@ -9,12 +9,8 @@ public class dataBase : MonoBehaviour
     private string dbName = "URI=file:jautajumi.db";
     private Objects objekti;
 
-    #if UNITY_EDITOR
     public ImageImporter imageImporter;
-    #endif
-
     private BankLoader bankloader;
-    public UnityEngine.UI.Button okPoga;
     void Start()
     {
         objekti = FindFirstObjectByType<Objects>();
@@ -23,8 +19,6 @@ public class dataBase : MonoBehaviour
         createDB();
     
     }
-
- 
 
     public void createDB()
     {
@@ -71,31 +65,6 @@ public class dataBase : MonoBehaviour
         }
     }
 
-    public void showQuestionWindow()
-    {
-        // Aktivizē logu:
-        objekti.objects[0].SetActive(true);
-
-        // Notīra InputField'us:
-        for (int i = 0; i < objekti.inputField.Length; i++)
-        {
-            objekti.inputField[i].text = "";
-        }
-
-        // Notīra ImageImporter savedFileName:
-        #if UNITY_EDITOR
-        imageImporter.savedFileName = "";
-        #endif
-
-        // Resetē pogu → uz pievienoJautajumu
-        okPoga.onClick.RemoveAllListeners();
-        okPoga.onClick.AddListener(addDataQuestion);
-
-        okPoga.transform.GetChild(0).GetComponent<Text>().text = "Pievienot jautājumu";
-
-        Debug.Log("Atvērts jauna jautājuma logs.");
-    }
-        
     public void addQuestionBank()
     {
         if (objekti == null || objekti.inputField.Length < 7)
@@ -125,6 +94,7 @@ public class dataBase : MonoBehaviour
             objekti.inputField[i].text = "";
         }
         bankloader.LoadBanks();
+        objekti.objects[1].gameObject.SetActive(false);
     }
 
     public void addDataQuestion()
@@ -161,7 +131,7 @@ public class dataBase : MonoBehaviour
     }
     else
     {
-        Debug.Log("Image file name: " + imageImporter.savedFileName);
+        Debug.Log("Image file name: " + imageImporter.savedFilePath);
     }
 
     using (var connection = new SqliteConnection(dbName))
@@ -177,9 +147,7 @@ public class dataBase : MonoBehaviour
 
             command.Parameters.Add(new SqliteParameter("@laiks", objekti.inputField[5].text));
             command.Parameters.Add(new SqliteParameter("@jautajums", objekti.inputField[0].text));
-        #if UNITY_EDITOR
-            command.Parameters.Add(new SqliteParameter("@bilde", imageImporter.savedFileName));
-        #endif
+            command.Parameters.Add(new SqliteParameter("@bilde", imageImporter.savedFilePath));
             command.Parameters.Add(new SqliteParameter("@atbilde", objekti.inputField[1].text));
             command.Parameters.Add(new SqliteParameter("@opcB", objekti.inputField[2].text));
             command.Parameters.Add(new SqliteParameter("@opcC", objekti.inputField[3].text));
@@ -195,10 +163,10 @@ public class dataBase : MonoBehaviour
             objekti.inputField[i].text = "";
         }
 
-#if UNITY_EDITOR
-        imageImporter.savedFileName = "";
+        imageImporter.savedFilePath = "";
         imageImporter.ClearPreview();
-#endif
+
+        objekti.objects[0].gameObject.SetActive(false);
 
         Debug.Log("Jautājums pievienots bankai ID: " + bankaId);
 }

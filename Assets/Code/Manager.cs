@@ -68,9 +68,8 @@ public class Manager : MonoBehaviour
                             reader["OpcijaD"].ToString()
                         };
                         q.CorrectAnswer = 1;
-                        string bildeNosaukums = reader["Bilde"].ToString();
-                        Sprite bilde = Resources.Load<Sprite>("Images/" + bildeNosaukums);
-                        q.Image = bilde;
+                        string bildeCels = reader["Bilde"].ToString();
+                        yield return StartCoroutine(LoadImageFromPath(bildeCels, q));
 
                         string timeStr = reader["Laiks"].ToString();
                         float timeValue;
@@ -88,6 +87,40 @@ public class Manager : MonoBehaviour
         GameOverPanel.SetActive(false);
         Debug.Log("Gatavs jautājumu skaits: " + QnA.Count);
         generateQuestion();
+    }
+    private IEnumerator LoadImageFromPath(string path, Questions q)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            Debug.LogWarning("Bilde ceļš ir tukšs.");
+            q.Image = null;
+            yield break;
+        }
+
+        string finalPath = path;
+        if (!path.StartsWith("file://"))
+        {
+            finalPath = "file://" + path;
+        }
+
+        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(finalPath))
+        {
+            yield return uwr.SendWebRequest();
+
+            if (uwr.result == UnityWebRequest.Result.Success)
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+                Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                q.Image = sprite;
+
+                Debug.Log($"Bilde ielādēta no ceļa: {path}");
+            }
+            else
+            {
+                Debug.LogError($"Neizdevās ielādēt bildi no ceļa: {path}. Kļūda: {uwr.error}");
+                q.Image = null;
+            }
+        }
     }
 
     public void velreiz()
