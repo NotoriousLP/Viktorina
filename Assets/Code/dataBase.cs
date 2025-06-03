@@ -20,50 +20,76 @@ public class dataBase : MonoBehaviour
     
     }
 
-    public void createDB()
+ public void createDB()
+{
+    using (var connection = new SqliteConnection(dbName))
     {
-        using (var connection = new SqliteConnection(dbName))
-        {
-            connection.Open();
+        connection.Open();
 
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = @"
-               
-                    CREATE TABLE IF NOT EXISTS jautajumuBanka (
-                        ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                        Laiks TEXT, 
-                        Jautajums VARCHAR(65), 
-                        Bilde TEXT, 
-                        Atbilde VARCHAR(25), 
-                        OpcijaB VARCHAR(45), 
-                        OpcijaC VARCHAR(45), 
-                        OpcijaD VARCHAR(45),
-                        banka_id INT(3)
-                    );
-                    CREATE TABLE IF NOT EXISTS bankasNos (
-                        banka_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        nosaukums VARCHAR(45)
-                    );
-                    CREATE TABLE IF NOT EXISTS scoreBoard (
+        using (var command = connection.CreateCommand())
+        {
+            // CREATE tabulas
+            command.CommandText = @"
+                CREATE TABLE IF NOT EXISTS jautajumuBanka (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Laiks TEXT, 
+                    Jautajums VARCHAR(65), 
+                    Bilde TEXT, 
+                    Atbilde VARCHAR(25), 
+                    OpcijaB VARCHAR(45), 
+                    OpcijaC VARCHAR(45), 
+                    OpcijaD VARCHAR(45),
+                    banka_id INT(3)
+                );
+                CREATE TABLE IF NOT EXISTS bankasNos (
+                    banka_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nosaukums VARCHAR(45)
+                );
+                CREATE TABLE IF NOT EXISTS scoreBoard (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
                     playerName TEXT,
                     punkti INT,
                     datums TEXT,
                     banka_id INT
-                    );
-                    CREATE TABLE IF NOT EXISTS users (
+                );
+                CREATE TABLE IF NOT EXISTS users (
                     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE NOT NULL,
                     password TEXT NOT NULL,
                     role TEXT NOT NULL
-                    );";
-                command.ExecuteNonQuery();
-            }
-
-            connection.Close();
+                );";
+            command.ExecuteNonQuery();
         }
+
+        // Pārbaudīt vai ir kāds users jau
+        using (var checkCmd = connection.CreateCommand())
+        {
+            checkCmd.CommandText = "SELECT COUNT(*) FROM users";
+            long userCount = (long)checkCmd.ExecuteScalar();
+
+            if (userCount == 0)
+            {
+                // Ja nav neviena usera → izveido default admin
+                using (var insertCmd = connection.CreateCommand())
+                {
+                    insertCmd.CommandText = @"
+                        INSERT INTO users (username, password, role)
+                        VALUES ('admin', 'admin123', 'admin');";
+
+                    insertCmd.ExecuteNonQuery();
+
+                    Debug.Log("Izveidots noklusētais admin konts (admin / admin123)");
+                }
+            }
+            else
+            {
+                Debug.Log($"Lietotāji DB jau eksistē ({userCount} lietotāji). Admin konts netika izveidots.");
+            }
+        }
+
+        connection.Close();
     }
+}
 
     public void addQuestionBank()
     {
