@@ -64,6 +64,10 @@ public class CustomButton : MonoBehaviour
         Application.Quit(); //Iziet no spēles
     }
 
+    public void toRegister()
+    {
+        SceneManager.LoadScene("RegisterScene", LoadSceneMode.Single);
+    }
     public void closeButton()
     {
         for (int i = 0; i < objekti.objects.Length; i++)
