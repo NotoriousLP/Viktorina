@@ -19,7 +19,7 @@ public class Manager : MonoBehaviour
     public GameObject GameOverPanel;
     public Text QuestionText;
     public Text ScoreText;
-    public TMP_InputField playerNameInputField;
+  
 
     public UnityEngine.UI.Button saveButton;
     public Text TimeText;
@@ -37,6 +37,10 @@ public class Manager : MonoBehaviour
         QnA = new List<Questions>();
         StartCoroutine(LoadQuestionsForSelectedBank());
         Debug.Log("Ielādējam jautājumus bankai ID: " + SelectedBank.ID);
+        if (saveButton != null)
+        {
+            saveButton.interactable = false;
+        }
     }
 
     private IEnumerator LoadQuestionsForSelectedBank()
@@ -103,6 +107,8 @@ public class Manager : MonoBehaviour
             finalPath = "file://" + path;
         }
 
+        Debug.Log("Mēģina ielādēt attēlu no ceļa: " + finalPath);
+
         using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(finalPath))
         {
             yield return uwr.SendWebRequest();
@@ -133,6 +139,49 @@ public class Manager : MonoBehaviour
         QuizPanel.SetActive(false);
         GameOverPanel.SetActive(true);
         ScoreText.text = "Pareizas atbildes skaits: " + correctAnswers + " / " + totalQuestions +  "\nIeguto punktu skaits: " + score;
+
+      
+
+  
+    int? existingScore = null;
+
+    using (var connection = new SqliteConnection("URI=file:jautajumi.db"))
+    {
+        connection.Open();
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = @"
+                SELECT punkti 
+                FROM scoreBoard 
+                WHERE playerName = @name AND banka_id = @bankaId";
+            command.Parameters.Add(new SqliteParameter("@name", CurrentUser.Username));
+            command.Parameters.Add(new SqliteParameter("@bankaId", SelectedBank.ID));
+
+            var result = command.ExecuteScalar();
+            if (result != null && result != DBNull.Value)
+            {
+                existingScore = Convert.ToInt32(result);
+            }
+        }
+
+        connection.Close();
+        }
+
+        if (!existingScore.HasValue || score > existingScore.Value)
+        {
+            if (saveButton != null)
+            {
+                saveButton.interactable = true;
+            }
+        }
+        else
+        {
+            Debug.Log($"Rezultāts netiek saglabāts – esošais ({existingScore}) ir labāks vai vienāds.");
+        }
+
+
+
 
         var scoreboard = FindFirstObjectByType<ScoreboardLoader>();
         if (scoreboard != null)
@@ -314,20 +363,21 @@ public void SaveScore()
 
             if (score > existingScore.Value)
             {
-                // Ja jaunie punkti ir labāki — veic UPDATE
-                using (var updateCmd = connection.CreateCommand())
-                {
-                    updateCmd.CommandText = @"
+                    // Ja jaunie punkti ir labāki — veic UPDATE
+                    using (var updateCmd = connection.CreateCommand())
+                    {
+                        updateCmd.CommandText = @"
                         UPDATE scoreBoard 
                         SET punkti = @newScore 
                         WHERE playerName = @name AND banka_id = @bankaId";
-                    updateCmd.Parameters.Add(new SqliteParameter("@newScore", score));
-                    updateCmd.Parameters.Add(new SqliteParameter("@name", CurrentUser.Username));
-                    updateCmd.Parameters.Add(new SqliteParameter("@bankaId", SelectedBank.ID));
+                        updateCmd.Parameters.Add(new SqliteParameter("@newScore", score));
+                        updateCmd.Parameters.Add(new SqliteParameter("@name", CurrentUser.Username));
+                        updateCmd.Parameters.Add(new SqliteParameter("@bankaId", SelectedBank.ID));
 
-                    updateCmd.ExecuteNonQuery();
+                        updateCmd.ExecuteNonQuery();
 
-                    Debug.Log($"Spēlētājam '{CurrentUser.Username}' atjaunināti punkti uz {score}.");
+                        Debug.Log($"Spēlētājam '{CurrentUser.Username}' atjaunināti punkti uz {score}.");
+                        saveButton.interactable = false;
                 }
             }
             else
@@ -356,10 +406,7 @@ public void SaveScore()
         saveButton.interactable = false;
     }
 
-    if (playerNameInputField != null)
-    {
-        playerNameInputField.text = "";
-    }
+  
 }
 
 }
