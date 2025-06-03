@@ -36,7 +36,7 @@ public class UserLogin : MonoBehaviour
             {
                 command.CommandText = "SELECT * FROM users WHERE username = @username AND password = @password";
                 command.Parameters.Add(new SqliteParameter("@username", username));
-                command.Parameters.Add(new SqliteParameter("@password", password)); // (vēlāk var šifrēt!)
+                command.Parameters.Add(new SqliteParameter("@password", password));
 
                 using (var reader = command.ExecuteReader())
                 {
