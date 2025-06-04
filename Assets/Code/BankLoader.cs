@@ -178,31 +178,32 @@ public class BankLoader : MonoBehaviour
         SelectedBank.Name = name;
 
         Debug.Log("Izvēlēta banka: " + name);
-                if (SceneManager.GetActiveScene().name == "CreateQuestions")
-                {
-                int bankaId = SelectedBank.ID;
-                if (bankaId == 0)
-                {
-                    Debug.LogError("Nav izvēlēta banka! BankaId = 0");
-                    return;
-                }
-                objekti.objects[0].SetActive(true);
+        if (SceneManager.GetActiveScene().name == "CreateQuestions")
+            {
+            objekti.text[8].gameObject.SetActive(false);   
+            int bankaId = SelectedBank.ID;
+            if (bankaId == 0)
+            {
+                Debug.LogError("Nav izvēlēta banka! BankaId = 0");
+                return;
+            }
+             objekti.objects[0].SetActive(true);
 
-                for (int i = 0; i < objekti.inputField.Length; i++)
-                {
-                    objekti.inputField[i].text = "";
-                }
+            for (int i = 0; i < objekti.inputField.Length; i++)
+            {
+                objekti.inputField[i].text = "";
+            }
 
 
-                imageImporter.savedFilePath= "";
+            imageImporter.savedFilePath= "";
 
-                // Resetē pogu → uz pievienoJautajumu
-                objekti.okPoga.onClick.RemoveAllListeners();
-                objekti.okPoga.onClick.AddListener(database.addDataQuestion);
+           
+            objekti.okPoga.onClick.RemoveAllListeners();
+            objekti.okPoga.onClick.AddListener(database.addDataQuestion);
 
-                objekti.okPoga.transform.GetChild(0).GetComponent<Text>().text = "Pievienot jautājumu";
+            objekti.okPoga.transform.GetChild(0).GetComponent<Text>().text = "Pievienot jautājumu";
 
-                Debug.Log("Atvērts jauna jautājuma logs.");
+            Debug.Log("Atvērts jauna jautājuma logs.");
         }
         else
         {

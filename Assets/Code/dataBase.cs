@@ -93,12 +93,15 @@ public class dataBase : MonoBehaviour
 
     public void addQuestionBank()
     {
-        if (objekti == null || objekti.inputField.Length < 7)
+        string bankaNosaukums = objekti.inputField[6].text.Trim();
+
+        if (string.IsNullOrEmpty(bankaNosaukums))
         {
-            Debug.LogError("Not enough input fields!");
+            objekti.text[7].gameObject.SetActive(true);
+
             return;
         }
-
+        
         using (var connection = new SqliteConnection(dbName))
         {
             connection.Open();
@@ -125,9 +128,16 @@ public class dataBase : MonoBehaviour
 
     public void addDataQuestion()
 {
-    if (objekti == null || objekti.inputField.Length < 7)
+    if (string.IsNullOrEmpty(objekti.inputField[0].text)
+     || string.IsNullOrEmpty(objekti.inputField[1].text)
+     || string.IsNullOrEmpty(objekti.inputField[2].text)
+     || string.IsNullOrEmpty(objekti.inputField[3].text)    
+     || string.IsNullOrEmpty(objekti.inputField[4].text)    
+     || string.IsNullOrEmpty(objekti.inputField[5].text)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   )
     {
         Debug.LogError("Not enough input fields!");
+        objekti.text[8].text = "Nav aizpildīti lauki!";
+        objekti.text[8].gameObject.SetActive(true);
         return;
     }
 
@@ -140,14 +150,16 @@ public class dataBase : MonoBehaviour
         return;
     }
 
-    // Laiks nedrīkst būt mazāks par 5 sekundēm un lielāks par 20 sekundēm
+    //Laiks nedrīkst būt mazāks par 5 sekundēm un lielāks par 20 sekundēm
     float timeValue;
     bool isValidTime = float.TryParse(objekti.inputField[5].text, out timeValue);
 
     if (!isValidTime || timeValue < 5f || timeValue > 20f)
     {
         Debug.LogError("Time must be between 5 and 20 seconds.");
-        return;
+            objekti.text[8].text = "Laiks nav iestatīts starp 5 un 20 sekundēm";
+            objekti.text[8].gameObject.SetActive(true);
+        return;     
     }
 
 

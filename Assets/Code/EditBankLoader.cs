@@ -106,6 +106,7 @@ public class EditBankLoader : MonoBehaviour
 
     public void EditQuestion(int questionId)
     {
+        objekti.text[7].gameObject.SetActive(false);
         Debug.Log($"Edit question ID: {questionId}");
 
         SelectedQuestion.ID = questionId;
@@ -197,6 +198,18 @@ private IEnumerator LoadPreviewImage(string path)
 
     public void SaveEditedQuestion()
     {
+    if (string.IsNullOrEmpty(objekti.inputField[0].text)
+        || string.IsNullOrEmpty(objekti.inputField[1].text)
+        || string.IsNullOrEmpty(objekti.inputField[2].text)
+        || string.IsNullOrEmpty(objekti.inputField[3].text)    
+        || string.IsNullOrEmpty(objekti.inputField[4].text)    
+        || string.IsNullOrEmpty(objekti.inputField[5].text)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   )
+        {
+            Debug.LogError("Not enough input fields!");
+            objekti.text[8].text = "Nav aizpildīti lauki!";
+            objekti.text[8].gameObject.SetActive(true);
+            return;
+        }
         Debug.Log($"Saglabājam question ID: {SelectedQuestion.ID}");
 
         using (var connection = new SqliteConnection(dbName))
@@ -223,11 +236,7 @@ private IEnumerator LoadPreviewImage(string path)
                 command.Parameters.Add(new SqliteParameter("@opcC", objekti.inputField[3].text));
                 command.Parameters.Add(new SqliteParameter("@opcD", objekti.inputField[4].text));
                 command.Parameters.Add(new SqliteParameter("@laiks", objekti.inputField[5].text));
-
-#if UNITY_EDITOR
                 command.Parameters.Add(new SqliteParameter("@bilde", imageImporter.savedFilePath));
-#endif
-
                 command.Parameters.Add(new SqliteParameter("@id", SelectedQuestion.ID));
 
                 int rowsAffected = command.ExecuteNonQuery();

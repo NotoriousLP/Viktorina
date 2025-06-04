@@ -89,6 +89,7 @@ public class CustomButton : MonoBehaviour
 
     public void showBank()
     {
+        objekti.text[7].gameObject.SetActive(false);   
         objekti.objects[1].SetActive(true);
     }
 
