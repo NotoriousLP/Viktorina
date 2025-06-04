@@ -32,7 +32,7 @@ public class CustomButton : MonoBehaviour
         }
         else
         {
-            Debug.LogError("addPoga nav piešķirta! Pārbaudi Inspector laukā.");
+            Debug.Log("addPoga nav piešķirta! Pārbaudi Inspector laukā.");
         }
     }
 
