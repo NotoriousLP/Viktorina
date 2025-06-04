@@ -10,39 +10,40 @@ using System;
 
 public class Manager : MonoBehaviour
 {
-    public List<Questions> QnA;
-    public GameObject[] options;
-    public int currentQuestion;
+    public List<Questions> QnA;  //Saraksts ar jautājumiem
+    public GameObject[] options;  
+    public int currentQuestion;   
 
-    public Image QuestionImage;
-    public GameObject QuizPanel;
-    public GameObject GameOverPanel;
-    public Text QuestionText;
-    public Text ScoreText;
-  
+    public Image QuestionImage;  
+    public GameObject QuizPanel;                   
+    public GameObject GameOverPanel;                
+    public Text QuestionText;                      
+    public Text ScoreText;                        
+    public UnityEngine.UI.Button saveButton;       
+    public Text TimeText;                           
 
-    public UnityEngine.UI.Button saveButton;
-    public Text TimeText;
+    private float questionTime;                     
+    private float timeLeft;                         
+    private bool timerRunning = false;              
 
-    private float questionTime;
-    private float timeLeft;
-    private bool timerRunning = false;
+    int totalQuestions = 0;                        
+    int correctAnswers = 0;                        
+    public int score;                               
 
-    int totalQuestions = 0;
-    int correctAnswers = 0;
-    public int score;
 
     private void Start()
     {
         QnA = new List<Questions>();
         StartCoroutine(LoadQuestionsForSelectedBank());
         Debug.Log("Ielādējam jautājumus bankai ID: " + SelectedBank.ID);
+
         if (saveButton != null)
         {
             saveButton.interactable = false;
         }
     }
 
+    //Ielādē jautājumus no datubāzes izvēlētajai bankai
     private IEnumerator LoadQuestionsForSelectedBank()
     {
         string dbName = "URI=file:jautajumi.db";
@@ -72,6 +73,7 @@ public class Manager : MonoBehaviour
                             reader["OpcijaD"].ToString()
                         };
                         q.CorrectAnswer = 1;
+
                         string bildeCels = reader["Bilde"].ToString();
                         yield return StartCoroutine(LoadImageFromPath(bildeCels, q));
 
@@ -90,13 +92,16 @@ public class Manager : MonoBehaviour
         totalQuestions = QnA.Count;
         GameOverPanel.SetActive(false);
         Debug.Log("Gatavs jautājumu skaits: " + QnA.Count);
+
         generateQuestion();
     }
+
+    //Ielādē jautājuma attēlu no path
     private IEnumerator LoadImageFromPath(string path, Questions q)
     {
         if (string.IsNullOrEmpty(path))
         {
-            Debug.LogWarning("Bilde ceļš ir tukšs.");
+            Debug.LogWarning("Bilde path ir tukšs.");
             q.Image = null;
             yield break;
         }
@@ -129,43 +134,44 @@ public class Manager : MonoBehaviour
         }
     }
 
+    //ielādē ainu no jauna
     public void velreiz()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
+    //Beidzās spēle, tad parāda rezultātu
     void GameOver()
     {
         QuizPanel.SetActive(false);
         GameOverPanel.SetActive(true);
-        ScoreText.text = "Pareizas atbildes skaits: " + correctAnswers + " / " + totalQuestions +  "\nIeguto punktu skaits: " + score;
 
-      
+        ScoreText.text = "Pareizas atbildes skaits: " + correctAnswers + " / " + totalQuestions + "\nIeguto punktu skaits: " + score;
 
-  
-    int? existingScore = null;
+        //Pārbauda vai var saglabāt jaunu rezultātu
+        int? existingScore = null;
 
-    using (var connection = new SqliteConnection("URI=file:jautajumi.db"))
-    {
-        connection.Open();
-
-        using (var command = connection.CreateCommand())
+        using (var connection = new SqliteConnection("URI=file:jautajumi.db"))
         {
-            command.CommandText = @"
-                SELECT punkti 
-                FROM scoreBoard 
-                WHERE playerName = @name AND banka_id = @bankaId";
-            command.Parameters.Add(new SqliteParameter("@name", CurrentUser.Username));
-            command.Parameters.Add(new SqliteParameter("@bankaId", SelectedBank.ID));
+            connection.Open();
 
-            var result = command.ExecuteScalar();
-            if (result != null && result != DBNull.Value)
+            using (var command = connection.CreateCommand())
             {
-                existingScore = Convert.ToInt32(result);
-            }
-        }
+                command.CommandText = @"
+                    SELECT punkti 
+                    FROM scoreBoard 
+                    WHERE playerName = @name AND banka_id = @bankaId";
+                command.Parameters.Add(new SqliteParameter("@name", CurrentUser.Username));
+                command.Parameters.Add(new SqliteParameter("@bankaId", SelectedBank.ID));
 
-        connection.Close();
+                var result = command.ExecuteScalar();
+                if (result != null && result != DBNull.Value)
+                {
+                    existingScore = Convert.ToInt32(result);
+                }
+            }
+
+            connection.Close();
         }
 
         if (!existingScore.HasValue || score > existingScore.Value)
@@ -180,9 +186,7 @@ public class Manager : MonoBehaviour
             Debug.Log($"Rezultāts netiek saglabāts – esošais ({existingScore}) ir labāks vai vienāds.");
         }
 
-
-
-
+        //Atjauno scoreboard
         var scoreboard = FindFirstObjectByType<ScoreboardLoader>();
         if (scoreboard != null)
         {
@@ -194,7 +198,7 @@ public class Manager : MonoBehaviour
         }
     }
 
-    // NEW: Dynamic point calculation based on time limit
+    //Aprēķina punktus atkarībā no laika limita
     private int CalculatePoints(float timeLimit)
     {
         if (timeLimit <= 0) return 1;
@@ -229,34 +233,34 @@ public class Manager : MonoBehaviour
         StartCoroutine(WaitAndGenerate());
     }
 
+    //Neliela pauze pirms nākamā jautājuma
     private IEnumerator WaitAndGenerate()
     {
         yield return new WaitForSeconds(1f);
         generateQuestion();
     }
 
+    //sajauc atbilžu pogas
     void SetAnswers()
     {
-        // Получаем текущий вопрос и ответы
         Questions currentQ = QnA[currentQuestion];
 
-        // Создаём список пар: текст + метка, правильный ли
         List<(string text, bool isCorrect)> shuffledAnswers = new List<(string, bool)>();
 
         for (int i = 0; i < currentQ.Answers.Length; i++)
         {
-            bool isCorrect = (i == currentQ.CorrectAnswer - 1); // CorrectAnswer == 1 -> индекс 0
+            bool isCorrect = (i == currentQ.CorrectAnswer - 1);
             shuffledAnswers.Add((currentQ.Answers[i], isCorrect));
         }
 
-        // Перемешиваем список
+        //Sajaukšana notiek
         for (int i = 0; i < shuffledAnswers.Count; i++)
         {
             int rnd = UnityEngine.Random.Range(i, shuffledAnswers.Count);
             (shuffledAnswers[i], shuffledAnswers[rnd]) = (shuffledAnswers[rnd], shuffledAnswers[i]);
         }
 
-        // Назначаем кнопкам текст и isCorrect
+        //Uzliek pogas
         for (int i = 0; i < options.Length; i++)
         {
             var answerScript = options[i].GetComponent<AnswersScript>();
@@ -269,6 +273,7 @@ public class Manager : MonoBehaviour
         }
     }
 
+    //Ģenerē nākamo jautājumu
     void generateQuestion()
     {
         if (QnA.Count > 0)
@@ -277,10 +282,12 @@ public class Manager : MonoBehaviour
             {
                 btn.GetComponent<AnswersScript>().ResetColor();
             }
+
             currentQuestion = UnityEngine.Random.Range(0, QnA.Count);
 
             QuestionImage.sprite = QnA[currentQuestion].Image;
             QuestionText.text = QnA[currentQuestion].Question;
+
             SetAnswers();
 
             if (QnA[currentQuestion].TimeLimit > 0)
@@ -325,45 +332,44 @@ public class Manager : MonoBehaviour
         }
     }
 
-public void SaveScore()
-{
-    var db = FindFirstObjectByType<dataBase>();
-    if (db == null)
+    //Saglabā punktus datubāzē
+    public void SaveScore()
     {
-        Debug.LogError("Datu bāze - kļūda! Neizdevās saglabāt rezultātu.");
-        return;
-    }
-
-    int? existingScore = null;
-
-    using (var connection = new SqliteConnection("URI=file:jautajumi.db"))
-    {
-        connection.Open();
-
-        using (var command = connection.CreateCommand())
+        var db = FindFirstObjectByType<dataBase>();
+        if (db == null)
         {
-            // Nolasa esošos punktus, ja ir ieraksts
-            command.CommandText = @"
-                SELECT punkti 
-                FROM scoreBoard 
-                WHERE playerName = @name AND banka_id = @bankaId";
-            command.Parameters.Add(new SqliteParameter("@name", CurrentUser.Username));
-            command.Parameters.Add(new SqliteParameter("@bankaId", SelectedBank.ID));
-
-            var result = command.ExecuteScalar();
-            if (result != null && result != DBNull.Value)
-            {
-                existingScore = Convert.ToInt32(result);
-            }
+            Debug.LogError("Datu bāze - kļūda! Neizdevās saglabāt rezultātu.");
+            return;
         }
 
-        if (existingScore.HasValue)
-        {
-            Debug.Log($"Spēlētājam '{CurrentUser.Username}' jau ir {existingScore.Value} punkti.");
+        int? existingScore = null;
 
-            if (score > existingScore.Value)
+        using (var connection = new SqliteConnection("URI=file:jautajumi.db"))
+        {
+            connection.Open();
+
+            using (var command = connection.CreateCommand())
             {
-                    // Ja jaunie punkti ir labāki — veic UPDATE
+                command.CommandText = @"
+                    SELECT punkti 
+                    FROM scoreBoard 
+                    WHERE playerName = @name AND banka_id = @bankaId";
+                command.Parameters.Add(new SqliteParameter("@name", CurrentUser.Username));
+                command.Parameters.Add(new SqliteParameter("@bankaId", SelectedBank.ID));
+
+                var result = command.ExecuteScalar();
+                if (result != null && result != DBNull.Value)
+                {
+                    existingScore = Convert.ToInt32(result);
+                }
+            }
+
+            if (existingScore.HasValue)
+            {
+                Debug.Log($"Spēlētājam '{CurrentUser.Username}' jau ir {existingScore.Value} punkti.");
+
+                if (score > existingScore.Value)
+                {
                     using (var updateCmd = connection.CreateCommand())
                     {
                         updateCmd.CommandText = @"
@@ -378,36 +384,31 @@ public void SaveScore()
 
                         Debug.Log($"Spēlētājam '{CurrentUser.Username}' atjaunināti punkti uz {score}.");
                         saveButton.interactable = false;
+                    }
+                }
+                else
+                {
+                    Debug.Log($"Esošie punkti ({existingScore.Value}) ir labāki vai vienādi. Rezultāts netiek atjaunināts.");
                 }
             }
             else
             {
-                Debug.Log($"Esošie punkti ({existingScore.Value}) ir labāki vai vienādi. Rezultāts netiek atjaunināts.");
+                db.SavePlayerScore(CurrentUser.Username, score);
+                Debug.Log($"Jauns rezultāts saglabāts spēlētājam '{CurrentUser.Username}' ar {score} punktiem.");
             }
+
+            connection.Close();
         }
-        else
+
+        var scoreboard = FindFirstObjectByType<ScoreboardLoader>();
+        if (scoreboard != null)
         {
-            // Ja spēlētājs vēl nav — INSERT
-            db.SavePlayerScore(CurrentUser.Username, score);
-            Debug.Log($"Jauns rezultāts saglabāts spēlētājam '{CurrentUser.Username}' ar {score} punktiem.");
+            scoreboard.LoadScoreboard(SelectedBank.ID);
         }
 
-        connection.Close();
+        if (saveButton != null)
+        {
+            saveButton.interactable = false;
+        }
     }
-
-    var scoreboard = FindFirstObjectByType<ScoreboardLoader>();
-    if (scoreboard != null)
-    {
-        scoreboard.LoadScoreboard(SelectedBank.ID);
-    }
-
-    if (saveButton != null)
-    {
-        saveButton.interactable = false;
-    }
-
-  
 }
-
-}
-

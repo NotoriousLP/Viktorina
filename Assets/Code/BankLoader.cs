@@ -2,24 +2,29 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Mono.Data.SqliteClient;
-using System.Collections.Generic;
-using System.Data;
 using UnityEngine.SceneManagement;
 
+//BankLoader — atbild par banku (jautājumu banku) saraksta ielādi, dzēšanu un izvēli.
+//Pārslēdzās starp spēles skatu un jautājumu rediģēšanas skatu.
+//Pievieno banku pogas dinamiski no DB.
+//Apstrādā Edit un Delete funkcijas.
 public class BankLoader : MonoBehaviour
 {
-    public GameObject buttonPrefab;
-    public Transform parentPanel; 
-    private Objects objekti;
-    public EditBankLoader editBankLoader;
-    public dataBase database;
-    public ImageImporter imageImporter;
-    private string dbName = "URI=file:jautajumi.db";
+    public GameObject buttonPrefab;          //Poga (prefab), ko pievieno banku sarakstam
+    public Transform parentPanel;            //Kur ielikt pogas (Content)
+    private Objects objekti;                 //UI objekti (input fields, texti, paneļi)
+    public EditBankLoader editBankLoader;    
+    public dataBase database;                
+    public ImageImporter imageImporter;      
+
+    private string dbName = "URI=file:jautajumi.db"; 
 
     void Start()
     {
         imageImporter = FindFirstObjectByType<ImageImporter>();
         database = FindFirstObjectByType<dataBase>();
+
+        //ielādē bankas atbilstoši pēc aina
         if (SceneManager.GetActiveScene().name == "CreateQuestions")
         {
             LoadBanks();
@@ -28,14 +33,18 @@ public class BankLoader : MonoBehaviour
         {
             loadGameBanks();
         }
-        objekti = FindFirstObjectByType<Objects>(); 
+
+        objekti = FindFirstObjectByType<Objects>();
+
         Debug.Log("buttonPrefab: " + (buttonPrefab == null));
         Debug.Log("parentPanel: " + (parentPanel == null));
     }
 
+    //Ielādē bankas CreateQuestions skatā.
+    //Dinamiski ģenerē pogas ar Edit un Delete.
     public void LoadBanks()
     {
-        // Notīra jau esošās pogas
+        //Notīra jau esošas pogas
         foreach (Transform child in parentPanel)
         {
             Destroy(child.gameObject);
@@ -56,16 +65,16 @@ public class BankLoader : MonoBehaviour
                         int id = reader.GetInt32(0);
                         string name = reader.GetString(1);
 
-                        // Poga
+                        //Izveido pogu klonēšanai
                         GameObject btn = Instantiate(buttonPrefab, parentPanel);
 
-                        // TMP_Text
+                        //Uzliek tekstu
                         btn.transform.GetChild(0).GetComponent<TMP_Text>().text = name;
 
-                        // Galvenā poga
+                        //Pievieno "OnClick" izvēlei
                         btn.GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => OnBankSelected(id, name));
 
-                        // Pārbaude un dzēšanas poga
+                        //DELETE poga
                         var deleteObj = btn.transform.Find("deleteButton");
 
                         if (deleteObj == null)
@@ -79,8 +88,10 @@ public class BankLoader : MonoBehaviour
                             UnityEngine.UI.Button deleteBtn = deleteObj.GetComponent<UnityEngine.UI.Button>();
                             deleteBtn.onClick.AddListener(() => DeleteBank(id));
                         }
-                        // EDIT poga
+
+                        //EDIT poga
                         var editObj = btn.transform.Find("editButton");
+
                         if (editObj == null)
                         {
                             Debug.LogError("editButton NAV atrasts prefabā!");
@@ -99,6 +110,7 @@ public class BankLoader : MonoBehaviour
     }
 
 
+    //Ielādē bankas spēles laikā (bez Edit un Delete).
     public void loadGameBanks()
     {
         // Notīrām jau esošās pogas
@@ -130,21 +142,24 @@ public class BankLoader : MonoBehaviour
                 }
             }
         }
-
     }
-    public void EditBank(int id)
+
+    // Edit bankas pogas funkcija — pāriet uz jautājumu rediģēšanas skatu.
+       public void EditBank(int id)
     {
         Debug.Log($"Edit bankas ID: {id}");
 
         SelectedBank.ID = id;
 
+        //Atver rediģēšanas paneli
         objekti.objects[2].SetActive(true);
 
+        //Ielādē jautājumus šai bankai
         editBankLoader.LoadQuestionsForBank(id);
-
     }
 
-    
+    //Dzēš banku un visus tās jautājumus.
+
     public void DeleteBank(int bankId)
     {
         Debug.Log("Dzēšam banku ID: " + bankId);
@@ -168,45 +183,55 @@ public class BankLoader : MonoBehaviour
             }
         }
 
-        //Atjaunojam sarakstu
+        //Atjauno sarakstu
         LoadBanks();
     }
 
+
+    //Kad lietotājs izvēlas banku (spēlē vai CreateQuestions ainā).
     void OnBankSelected(int id, string name)
     {
         SelectedBank.ID = id;
         SelectedBank.Name = name;
 
         Debug.Log("Izvēlēta banka: " + name);
+
         if (SceneManager.GetActiveScene().name == "CreateQuestions")
-            {
-            objekti.text[8].gameObject.SetActive(false);   
+        {
+            //Noslēpj kļūdu tekstu (ja bija)
+            objekti.text[8].gameObject.SetActive(false);
+
             int bankaId = SelectedBank.ID;
             if (bankaId == 0)
             {
                 Debug.LogError("Nav izvēlēta banka! BankaId = 0");
                 return;
             }
-             objekti.objects[0].SetActive(true);
 
+            //Atver jautājumu pievienošanas logu
+            objekti.objects[0].SetActive(true);
+
+            //Notīra ievadlaukus
             for (int i = 0; i < objekti.inputField.Length; i++)
             {
                 objekti.inputField[i].text = "";
             }
 
+            //Notīra bildes izvēli
+            imageImporter.savedFilePath = "";
 
-            imageImporter.savedFilePath= "";
-
-           
+            //Piesaista pogu uz pievienošanu
             objekti.okPoga.onClick.RemoveAllListeners();
             objekti.okPoga.onClick.AddListener(database.addDataQuestion);
 
+            //Maina pogas tekstu
             objekti.okPoga.transform.GetChild(0).GetComponent<Text>().text = "Pievienot jautājumu";
 
             Debug.Log("Atvērts jauna jautājuma logs.");
         }
         else
         {
+            //Ja spēles aina, tad pārslēdz uz GameScene
             SceneManager.LoadScene("GameScene");
         }
     }

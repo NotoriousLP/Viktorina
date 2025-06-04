@@ -7,7 +7,7 @@ public class UserRegistration : MonoBehaviour
 {
     public TMP_InputField usernameField;
     public TMP_InputField passwordField;
-    public TMP_Dropdown roleDropdown; // Optional – remove if you want fixed role
+    public TMP_Dropdown roleDropdown; 
     public TMP_Text text;
 
     private string dbName = "URI=file:jautajumi.db";
@@ -16,7 +16,7 @@ public class UserRegistration : MonoBehaviour
     {
         string username = usernameField.text.Trim();
         string password = passwordField.text.Trim();
-        string role = roleDropdown.options[roleDropdown.value].text; // or use "player" as default
+        string role = roleDropdown.options[roleDropdown.value].text; 
 
         if (username == "" || password == "")
         {

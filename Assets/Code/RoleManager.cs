@@ -2,29 +2,29 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Mono.Data.SqliteClient;
-using UnityEngine.SceneManagement; // Nepieciešams, lai pārslēgtu scēnas
+using UnityEngine.SceneManagement; 
 
 public class RoleManager : MonoBehaviour
 {
-    public GameObject userRowPrefab;    // UserRow prefabs, kas tiks instanciēts katram lietotājam
-    public Transform contentParent;     // Scroll View > Content objekts, kur ievieto rindas
+    public GameObject userRowPrefab;    //UserRow prefabs, kas tiks instanciēts katram lietotājam
+    public Transform contentParent;     //Scroll View > Content objekts, kur ievieto rindas
 
-    private string dbName = "URI=file:jautajumi.db"; // Norāde uz SQLite datu bāzes failu
+    private string dbName = "URI=file:jautajumi.db"; 
 
     void Start()
     {
-        // Pārbauda, vai pašreizējam lietotājam ir tiesības skatīt šo logu
+        //Pārbauda, vai pašreizējam lietotājam ir tiesības skatīt šo logu
         if (CurrentUser.Role != "editor" && CurrentUser.Role != "admin")
         {
             Debug.LogWarning("Piekļuve liegta – tikai redaktoriem/adminiem.");
             return;
         }
 
-        // Ielādē visus lietotājus no datu bāzes
+        //Ielādē visus lietotājus no datu bāzes
         LoadUsers();
     }
 
-    // Metode, lai ielādētu lietotājus un parādītu katru kā atsevišķu rindu UI
+    //Metode, lai ielādētu lietotājus un parādītu katru kā atsevišķu rindu UI
     void LoadUsers()
     {
         // Notīra vecās rindas, ja tādas jau ir
@@ -104,7 +104,7 @@ public class RoleManager : MonoBehaviour
     // Šī metode tiek izsaukta, kad lietotājs nospiež "Home" pogu
     public void GoToMainMenu()
     {
-        SceneManager.LoadScene("MainMenu"); // Aizvieto ar precīzu MainMenu scēnas nosaukumu
+        SceneManager.LoadScene("MainMenu"); 
     }
 }
 // Šī klase pārvalda lomu pārvaldību, ļaujot rediģēt lietotāju lomas un piekļuves tiesības

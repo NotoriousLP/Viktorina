@@ -6,21 +6,20 @@ using TMPro;
 
 public class ScoreboardLoader : MonoBehaviour
 {
-    public Transform contentHolder; 
-    public GameObject rowPrefab;
+    public Transform contentHolder;        
+    public GameObject rowPrefab;            
 
     private string dbName = "URI=file:jautajumi.db";
 
     void Start()
     {
-       
         LoadScoreboard(SelectedBank.ID);
-        
     }
 
+    //Ielādē scoreboard izvēlētajai bankai
     public void LoadScoreboard(int bankaId)
     {
-  
+        //Notīra vecās rindas
         foreach (Transform child in contentHolder)
         {
             Destroy(child.gameObject);
@@ -29,7 +28,8 @@ public class ScoreboardLoader : MonoBehaviour
         using (var connection = new SqliteConnection(dbName))
         {
             connection.Open();
-            Debug.Log("Banka id: "+ bankaId);
+            Debug.Log("Banka id: " + bankaId);
+
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = @"
@@ -53,6 +53,7 @@ public class ScoreboardLoader : MonoBehaviour
 
                         Debug.Log($"Row {rowCount + 1}: {player} - {points}");
 
+                        //Izveido jaunu rindu UI
                         GameObject row = Instantiate(rowPrefab, contentHolder);
                         TextMeshProUGUI[] texts = row.GetComponentsInChildren<TextMeshProUGUI>();
 
@@ -69,14 +70,16 @@ public class ScoreboardLoader : MonoBehaviour
                         rowCount++;
                     }
 
+                    //Ja nav rezultātu šai bankai
                     if (rowCount == 0)
                     {
-                         Debug.Log("Nav rezultātu šai bankai.");
+                        Debug.Log("Nav rezultātu šai bankai.");
 
-                        
+                        //Fallback = parāda visu tabulu DEBUG vajadzībām
                         using (var fallbackCmd = connection.CreateCommand())
                         {
                             fallbackCmd.CommandText = "SELECT playerName, punkti, banka_id FROM scoreBoard ORDER BY banka_id";
+
                             using (var fallbackReader = fallbackCmd.ExecuteReader())
                             {
                                 int fallbackCount = 0;

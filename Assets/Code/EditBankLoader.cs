@@ -2,19 +2,17 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Mono.Data.SqliteClient;
-using System.Collections.Generic;
-using System.Data;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using UnityEngine.Networking;
+
 public class EditBankLoader : MonoBehaviour
 {
-    public Transform questionParent; // Kur spawnēt jautājumus
-    public GameObject questionRowPrefab; // Prefabs priekš jautājuma rindiņas
+    public Transform questionParent; //Kur pievieno jautājumus
+    public GameObject questionRowPrefab; //Prefs priekš jautājuma rindiņas
     public string dbName = "URI=file:jautajumi.db";
     public Objects objekti;
     public ImageImporter imageImporter;
-
 
     void Start()
     {
@@ -22,9 +20,10 @@ public class EditBankLoader : MonoBehaviour
         imageImporter = FindFirstObjectByType<ImageImporter>();
     }
 
+    //Ielādē jautājumus no DB un uzzīmē sarakstu
     public void LoadQuestionsForBank(int bankId)
     {
-        // Notīra vecos
+        //Notīra vecos jautājumus no UI
         foreach (Transform child in questionParent)
         {
             Destroy(child.gameObject);
@@ -50,27 +49,28 @@ public class EditBankLoader : MonoBehaviour
 
                         row.transform.GetChild(0).GetComponent<TMP_Text>().text = questionText;
 
-                        // Edit poga
+                        //Pievieno Edit pogas onClick
                         var editBtnObj = row.transform.Find("editButton");
                         UnityEngine.UI.Button editBtn = editBtnObj.GetComponent<UnityEngine.UI.Button>();
                         editBtn.onClick.AddListener(() => EditQuestion(questionId));
 
-                        // Delete poga
+                        //Pievieno Delete pogas onClick
                         var deleteBtnObj = row.transform.Find("deleteButton");
                         UnityEngine.UI.Button deleteBtn = deleteBtnObj.GetComponent<UnityEngine.UI.Button>();
                         deleteBtn.onClick.AddListener(() => DeleteQuestion(questionId));
 
+                        //Ielādē jautājuma bildi
                         string imagePath = reader["Bilde"].ToString();
                         var imageObj = row.transform.Find("questionImage").GetComponent<Image>();
 
                         StartCoroutine(LoadImageFromPath(imagePath, imageObj));
-                        
                     }
                 }
             }
         }
     }
 
+    //Ielādē bildi un parāda jautājumu sarakstā
     private IEnumerator LoadImageFromPath(string path, Image targetImage)
     {
         if (string.IsNullOrEmpty(path))
@@ -86,11 +86,11 @@ public class EditBankLoader : MonoBehaviour
             finalPath = "file://" + path;
         }
 
-        using (UnityEngine.Networking.UnityWebRequest uwr = UnityEngine.Networking.UnityWebRequestTexture.GetTexture(finalPath))
+        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(finalPath))
         {
             yield return uwr.SendWebRequest();
 
-            if (uwr.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+            if (uwr.result == UnityWebRequest.Result.Success)
             {
                 Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
                 Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
@@ -102,114 +102,120 @@ public class EditBankLoader : MonoBehaviour
             }
         }
     }
-       
 
+    //Parāda rediģēšanas logu konkrētajam jautājumam
     public void EditQuestion(int questionId)
     {
         objekti.text[7].gameObject.SetActive(false);
+
         Debug.Log($"Edit question ID: {questionId}");
 
         SelectedQuestion.ID = questionId;
 
+        //Parāda rediģēšanas logu
         objekti.objects[0].SetActive(true);
 
-        // Ielādē datus
+        //Ielādē jautājuma datus
         LoadQuestionData(questionId);
 
-        // Pārsien pogu uz SaveEditedQuestion
+        //Pievieno Save pogas listeneri
         objekti.okPoga.onClick.RemoveAllListeners();
         objekti.okPoga.onClick.AddListener(SaveEditedQuestion);
 
-        // (Var arī nomainīt pogas tekstu ja gribi)
+        //Maina pogas tekstu
         objekti.okPoga.transform.GetChild(0).GetComponent<Text>().text = "Saglabāt izmaiņas";
     }
 
-public void LoadQuestionData(int questionId)
-{
-    using (var connection = new SqliteConnection(dbName))
+    //Ielādē jautājuma datus rediģēšanai
+    public void LoadQuestionData(int questionId)
     {
-        connection.Open();
-
-        using (var command = connection.CreateCommand())
+        using (var connection = new SqliteConnection(dbName))
         {
-            command.CommandText = "SELECT * FROM jautajumuBanka WHERE ID = @id";
-            command.Parameters.Add(new SqliteParameter("@id", questionId));
+            connection.Open();
 
-            using (var reader = command.ExecuteReader())
+            using (var command = connection.CreateCommand())
             {
-                if (reader.Read())
+                command.CommandText = "SELECT * FROM jautajumuBanka WHERE ID = @id";
+                command.Parameters.Add(new SqliteParameter("@id", questionId));
+
+                using (var reader = command.ExecuteReader())
                 {
-                    // TAVA struktūra:
-                    objekti.inputField[0].text = reader["Jautajums"].ToString();
-                    objekti.inputField[1].text = reader["Atbilde"].ToString();
-                    objekti.inputField[2].text = reader["OpcijaB"].ToString();
-                    objekti.inputField[3].text = reader["OpcijaC"].ToString();
-                    objekti.inputField[4].text = reader["OpcijaD"].ToString();
-                    objekti.inputField[5].text = reader["Laiks"].ToString();
+                    if (reader.Read())
+                    {
+                        objekti.inputField[0].text = reader["Jautajums"].ToString();
+                        objekti.inputField[1].text = reader["Atbilde"].ToString();
+                        objekti.inputField[2].text = reader["OpcijaB"].ToString();
+                        objekti.inputField[3].text = reader["OpcijaC"].ToString();
+                        objekti.inputField[4].text = reader["OpcijaD"].ToString();
+                        objekti.inputField[5].text = reader["Laiks"].ToString();
 
-                    string imagePath = reader["Bilde"].ToString();
-                    imageImporter.savedFilePath = imagePath;
-                    StartCoroutine(LoadPreviewImage(imagePath));
-
+                        //Ielādē preview bildi
+                        string imagePath = reader["Bilde"].ToString();
+                        imageImporter.savedFilePath = imagePath;
+                        StartCoroutine(LoadPreviewImage(imagePath));
+                    }
                 }
             }
         }
     }
-}
-private IEnumerator LoadPreviewImage(string path)
-{
-    if (string.IsNullOrEmpty(path))
-    {
-        Debug.LogWarning("Preview bilde ceļš ir tukšs.");
-        imageImporter.previewImage.sprite = null;
-        imageImporter.previewImage.color = new Color(1,1,1,0);
-        yield break;
-    }
 
-    string finalPath = path;
-    if (!path.StartsWith("file://"))
+    //Ielādē preview bildi priekš rediģēšanas loga
+    private IEnumerator LoadPreviewImage(string path)
     {
-        finalPath = "file://" + path;
-    }
-
-    using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(finalPath))
-    {
-        yield return uwr.SendWebRequest();
-
-        if (uwr.result == UnityWebRequest.Result.Success)
+        if (string.IsNullOrEmpty(path))
         {
-            Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
-            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-
-            imageImporter.previewImage.sprite = sprite;
-            imageImporter.previewImage.color = Color.white;
-
-            Debug.Log($"Preview bilde ielādēta no: {path}");
-        }
-        else
-        {
-            Debug.LogError($"Neizdevās ielādēt preview bildi no: {path}. Kļūda: {uwr.error}");
+            Debug.LogWarning("Preview bilde ceļš ir tukšs.");
             imageImporter.previewImage.sprite = null;
             imageImporter.previewImage.color = new Color(1,1,1,0);
+            yield break;
+        }
+
+        string finalPath = path;
+        if (!path.StartsWith("file://"))
+        {
+            finalPath = "file://" + path;
+        }
+
+        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(finalPath))
+        {
+            yield return uwr.SendWebRequest();
+
+            if (uwr.result == UnityWebRequest.Result.Success)
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+                Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+
+                imageImporter.previewImage.sprite = sprite;
+                imageImporter.previewImage.color = Color.white;
+
+                Debug.Log($"Preview bilde ielādēta no: {path}");
+            }
+            else
+            {
+                Debug.LogError($"Neizdevās ielādēt preview bildi no: {path}. Kļūda: {uwr.error}");
+                imageImporter.previewImage.sprite = null;
+                imageImporter.previewImage.color = new Color(1,1,1,0);
+            }
         }
     }
-}
 
-
+    //Saglabā izmaiņas jautājumā
     public void SaveEditedQuestion()
     {
-    if (string.IsNullOrEmpty(objekti.inputField[0].text)
-        || string.IsNullOrEmpty(objekti.inputField[1].text)
-        || string.IsNullOrEmpty(objekti.inputField[2].text)
-        || string.IsNullOrEmpty(objekti.inputField[3].text)    
-        || string.IsNullOrEmpty(objekti.inputField[4].text)    
-        || string.IsNullOrEmpty(objekti.inputField[5].text)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   )
+        //Pārbauda vai obligātie lauki aizpildīti
+        if (string.IsNullOrEmpty(objekti.inputField[0].text)
+            || string.IsNullOrEmpty(objekti.inputField[1].text)
+            || string.IsNullOrEmpty(objekti.inputField[2].text)
+            || string.IsNullOrEmpty(objekti.inputField[3].text)    
+            || string.IsNullOrEmpty(objekti.inputField[4].text)    
+            || string.IsNullOrEmpty(objekti.inputField[5].text))
         {
             Debug.LogError("Not enough input fields!");
             objekti.text[8].text = "Nav aizpildīti lauki!";
             objekti.text[8].gameObject.SetActive(true);
             return;
         }
+
         Debug.Log($"Saglabājam question ID: {SelectedQuestion.ID}");
 
         using (var connection = new SqliteConnection(dbName))
@@ -252,17 +258,18 @@ private IEnumerator LoadPreviewImage(string path)
             }
         }
 
-        // Aizver edit paneli
+        //Aizver edit paneli
         objekti.objects[0].SetActive(false);
 
-        // Atjauno sarakstu
+        //Atjauno jautājumu sarakstu
         LoadQuestionsForBank(SelectedBank.ID);
     }
 
-
+    //Dzēš jautājumu no datubāzes
     public void DeleteQuestion(int questionId)
     {
         Debug.Log($"Delete question ID: {questionId}");
+
         using (var connection = new SqliteConnection(dbName))
         {
             connection.Open();
@@ -285,8 +292,7 @@ private IEnumerator LoadPreviewImage(string path)
             }
         }
 
-        // Atjauno sarakstu
+        //Atjauno jautājumu sarakstu
         LoadQuestionsForBank(SelectedBank.ID);
-
     }
 }

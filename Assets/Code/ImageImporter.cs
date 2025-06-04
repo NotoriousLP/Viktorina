@@ -6,33 +6,38 @@ using UnityEngine.Networking;
 
 public class ImageImporter : MonoBehaviour
 {
-    public Image previewImage;
-    public string savedFileName;
-    public string savedFilePath; // NEW
+    public Image previewImage;       //UI komponents kurā parādīt preview
+    public string savedFileName;     //Faila nosaukums bez paplašinājuma
+    public string savedFilePath;     //Pilns path nosaukums uz saglabāto attēlu
 
+    // Atver failu pārlūku un ļauj izvēlēties attēlu no datora
     public void SelectImageFromPC()
     {
+        //Atver logu ar formātiem (png, jpg, jpeg) 
         var paths = StandaloneFileBrowser.OpenFilePanel("Izvēlies attēlu", "", new[] { new ExtensionFilter("Image Files", "png", "jpg", "jpeg") }, false);
 
+        //Ja lietotājs izvēlējās attēlu
         if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
         {
             string path = paths[0];
             string fileName = Path.GetFileName(path);
             string fileNameWithoutExt = Path.GetFileNameWithoutExtension(path);
 
-            // Saglabā uz persistentDataPath/Images
+            //Izveido mapi persistentDataPath/Images (ja vēl nav)
             string imagesFolder = Path.Combine(Application.persistentDataPath, "Images");
             Directory.CreateDirectory(imagesFolder);
 
+            //Uz kurieni kopēt attēlu
             string targetPath = Path.Combine(imagesFolder, fileName);
             File.Copy(path, targetPath, true);
 
             Debug.Log("Attēls nokopēts uz: " + targetPath);
 
+            //Saglabā vietas priekš spēles
             savedFileName = fileNameWithoutExt;
-            savedFilePath = targetPath; // NEW
+            savedFilePath = targetPath;
 
-            // Ielādē un parāda preview
+            //Ielādē attēlu previewImage komponentā
             StartCoroutine(LoadImageCoroutine("file://" + targetPath));
         }
         else
@@ -41,6 +46,7 @@ public class ImageImporter : MonoBehaviour
         }
     }
 
+    //Ielādē attēlu no faila un parāda previewImage komponentā
     private System.Collections.IEnumerator LoadImageCoroutine(string filePath)
     {
         using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(filePath))
@@ -65,6 +71,7 @@ public class ImageImporter : MonoBehaviour
         }
     }
 
+    //Notīra preview Image (piemēram, kad atver jaunu jautājumu)
     public void ClearPreview()
     {
         if (previewImage != null)

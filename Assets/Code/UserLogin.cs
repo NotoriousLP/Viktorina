@@ -42,14 +42,14 @@ public class UserLogin : MonoBehaviour
                 {
                     if (reader.Read())
                     {
-                        // Login OK
+                        //Login OK
                         CurrentUser.UserID = reader.GetInt32(0);
                         CurrentUser.Username = reader.GetString(1);
                         CurrentUser.Role = reader.GetString(3);
 
                         Debug.Log($"Login OK: {CurrentUser.Username} ({CurrentUser.Role})");
 
-                        // Pēc veiksmīgas pieteikšanās pāriet uz MainMenu neatkarīgi no lietotāja lomas
+                        //Pēc veiksmīgas pieteikšanās pāriet uz MainMenu ainu neatkarīgi no lietotāja lomas
                         SceneManager.LoadScene("MainMenu");
 
                     }
